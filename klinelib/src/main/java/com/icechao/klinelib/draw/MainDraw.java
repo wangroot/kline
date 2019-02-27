@@ -310,9 +310,9 @@ public class MainDraw implements IChartDraw<ICandle> {
         strings[2] = (String.valueOf(point.getHighPrice()));
         strings[3] = (String.valueOf(point.getLowPrice()));
         strings[4] = (String.valueOf(point.getClosePrice()));
-        float tempDiffPrice = point.getOpenPrice() - point.getClosePrice();
+        float tempDiffPrice = point.getClosePrice() - point.getOpenPrice();
         strings[5] = (String.valueOf(tempDiffPrice));
-        strings[6] = (String.format("%.2f", (tempDiffPrice) / point.getOpenPrice()) + "%");
+        strings[6] = (String.format("%.2f", (tempDiffPrice) *100 / point.getOpenPrice()) + "%");
         strings[7] = (String.valueOf(point.getVolume()));
 
         float width = 0, left, top = margin + view.getTopPadding();
