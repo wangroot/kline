@@ -134,14 +134,14 @@ public class MainDraw implements IChartDraw<ICandle> {
                 }
                 if (0 != lastPoint.getMb()) {
                     if (itemCount - 1 == position && 0 != bollMb) {
-                        view.drawLine(canvas, indexPaintOne, lastX, lastPoint.getMb(), curX, bollMb);
+                        view.drawLine(canvas, indexPaintTwo, lastX, lastPoint.getMb(), curX, bollMb);
                     } else {
                         view.drawLine(canvas, indexPaintTwo, lastX, lastPoint.getMb(), curX, curPoint.getMb());
                     }
                 }
                 if (0 != lastPoint.getDn()) {
                     if (itemCount - 1 == position && 0 != bollDn) {
-                        view.drawLine(canvas, indexPaintOne, lastX, lastPoint.getDn(), curX, bollDn);
+                        view.drawLine(canvas, indexPaintThree, lastX, lastPoint.getDn(), curX, bollDn);
                     } else {
                         view.drawLine(canvas, indexPaintThree, lastX, lastPoint.getDn(), curX, curPoint.getDn());
                     }
