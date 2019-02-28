@@ -617,10 +617,10 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             float tempLeft = x - halfTextWidth;
             float left = tempLeft - textHorizentalPadding;
             float right = x + halfTextWidth + textHorizentalPadding;
-            float bottom = y + baseLine + r;
+            float bottom = y + baseLine + r - 2;
             canvas.drawRect(left, y, right, bottom, selectedPointPaint);
             canvas.drawRect(left, y, right, bottom, selectorFramePaint);
-            canvas.drawText(date, tempLeft, y + baseLine + 5, textPaint);
+            canvas.drawText(date, tempLeft, fixTextYBaseBottom((bottom + y) / 2), textPaint);
         }
     }
 
