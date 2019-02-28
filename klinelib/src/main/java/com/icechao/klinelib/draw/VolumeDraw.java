@@ -84,6 +84,14 @@ public class VolumeDraw implements IChartDraw<IVolume> {
         } else {
             top = view.getVolY(curPoint.getVolume());
         }
+        //添加成交量柱状图高度限制
+        int bottom = view.getVolRect().bottom;
+        if (top > bottom) {
+            top = bottom;
+        }
+        if (0 != view.getLastVol() && top > bottom - 1) {
+            top = bottom - 1;
+        }
         int bottom = view.getVolRect().bottom;
         if (view.isLine()) {
             canvas.drawRect(curX - lineVolWidth, top, curX + lineVolWidth, bottom, linePaint);
