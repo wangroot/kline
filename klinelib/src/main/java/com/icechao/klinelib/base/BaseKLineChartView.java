@@ -444,6 +444,9 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                 lastPoint = currentPoint;
                 lastX = 0;
             }
+            if (null == lastPoint || null == currentPoint) {
+                break;
+            }
             mainDraw.drawTranslated(lastPoint, currentPoint, lastX, currentPointX, canvas, this, i);
             volDraw.drawTranslated(lastPoint, currentPoint, lastX, currentPointX, canvas, this, i);
             if (null != childDraw) {
