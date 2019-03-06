@@ -92,7 +92,6 @@ public class VolumeDraw implements IChartDraw<IVolume> {
         if (0 != view.getLastVol() && top > bottom - 1) {
             top = bottom - 1;
         }
-        int bottom = view.getVolRect().bottom;
         if (view.isLine()) {
             canvas.drawRect(curX - lineVolWidth, top, curX + lineVolWidth, bottom, linePaint);
         } else if (curPoint.getClosePrice() > curPoint.getOpenPrice()) {//涨
