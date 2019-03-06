@@ -33,13 +33,7 @@ import com.icechao.klinelib.utils.ViewUtil;
  *************************************************************************/
 public class KLineChartView extends BaseKLineChartView {
 
-    ProgressBar mProgressBar;
-    private boolean isRefreshing = false;
-    private boolean isLoadMoreEnd = false;
-    private boolean mLastScrollEnable;
-    private boolean mLastScaleEnable;
-
-    private KChartRefreshListener mRefreshListener;
+    private ProgressBar mProgressBar;
 
     private MACDDraw mMACDDraw;
     private RSIDraw mRSIDraw;
@@ -95,13 +89,12 @@ public class KLineChartView extends BaseKLineChartView {
         setMinuteLineColor(getResources().getColor(R.color.chart_minute_line));
 
 
-        setAreaTopColor(getResources().getColor(R.color.chart_line_start));
-        setAreaBottomColor(getResources().getColor(R.color.chart_line_end));
-
-
         //背景添加渐变色
         setBackgroundStartColor(getResources().getColor(R.color.kline_bg_start));
         setBackgroundEmdColor(getResources().getColor(R.color.info_kline_bg_end));
+
+        setAreaTopColor(getResources().getColor(R.color.chart_line_start));
+        setAreaBottomColor(getResources().getColor(R.color.chart_line_end));
 
         setEndPointColor(Color.WHITE);
         setLineEndPointWidth(ViewUtil.Dp2Px(context, 4));
@@ -187,44 +180,24 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
     public void showLoading() {
-        if (!isLoadMoreEnd && !isRefreshing) {
-            isRefreshing = true;
-            if (null != mProgressBar) {
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-            if (null != mRefreshListener) {
-                mRefreshListener.onLoadMoreBegin(this);
-            }
-            mLastScaleEnable = isScaleEnable();
-            mLastScrollEnable = isScrollEnable();
-            super.setScrollEnable(false);
-            super.setScaleEnable(false);
+        if (null != mProgressBar) {
+            mProgressBar.setVisibility(View.VISIBLE);
         }
     }
 
     public void justShowLoading() {
-        if (!isRefreshing) {
-            isLongPress = false;
-            isRefreshing = true;
-            if (null != mProgressBar) {
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-            if (null != mRefreshListener) {
-                mRefreshListener.onLoadMoreBegin(this);
-            }
-            mLastScaleEnable = isScaleEnable();
-            mLastScrollEnable = isScrollEnable();
-            super.setScrollEnable(false);
-            super.setScaleEnable(false);
+        if (null != mProgressBar) {
+            mProgressBar.setVisibility(View.VISIBLE);
+            isShowLoading = true;
         }
     }
 
-    private void hideLoading() {
+
+    public void hideLoading() {
         if (null != mProgressBar) {
             mProgressBar.setVisibility(View.GONE);
+            isShowLoading = false;
         }
-        super.setScrollEnable(mLastScrollEnable);
-        super.setScaleEnable(mLastScaleEnable);
     }
 
     /**
@@ -232,52 +205,12 @@ public class KLineChartView extends BaseKLineChartView {
      */
     public void hideSelectData() {
         isLongPress = false;
-//        invalidate();
     }
 
-    /**
-     * 刷新完成
-     */
-    @SuppressWarnings("unused")
-    public void refreshComplete() {
-        isRefreshing = false;
-        hideLoading();
-    }
-
-    /**
-     * 刷新完成，没有数据
-     */
-    public void refreshEnd() {
-        isLoadMoreEnd = true;
-        isRefreshing = false;
-        hideLoading();
-    }
-
-    /**
-     * 重置加载更多
-     */
-    @SuppressWarnings("unused")
-    public void resetLoadMoreEnd() {
-        isLoadMoreEnd = false;
-    }
-
-    @SuppressWarnings("unused")
-    public void setLoadMoreEnd() {
-        isLoadMoreEnd = true;
-    }
-
-    public interface KChartRefreshListener {
-        /**
-         * 加载更多
-         *
-         * @param chart chart
-         */
-        void onLoadMoreBegin(KLineChartView chart);
-    }
 
     @Override
     public void setScaleEnable(boolean scaleEnable) {
-        if (isRefreshing) {
+        if (isShowLoading) {
             throw new IllegalStateException("请勿在刷新状态设置属性");
         }
         super.setScaleEnable(scaleEnable);
@@ -286,7 +219,7 @@ public class KLineChartView extends BaseKLineChartView {
 
     @Override
     public void setScrollEnable(boolean scrollEnable) {
-        if (isRefreshing) {
+        if (isShowLoading) {
             throw new IllegalStateException("请勿在刷新状态设置属性");
         }
         super.setScrollEnable(scrollEnable);
@@ -476,13 +409,6 @@ public class KLineChartView extends BaseKLineChartView {
         mMainDraw.setSelectorTextColor(color);
     }
 
-    /**
-     * 设置刷新监听
-     */
-    @SuppressWarnings("all")
-    public void setRefreshListener(KChartRefreshListener refreshListener) {
-        mRefreshListener = refreshListener;
-    }
 
     public void setMainDrawLine(boolean isLine) {
         setShowLine(isLine);
@@ -490,7 +416,7 @@ public class KLineChartView extends BaseKLineChartView {
 
     @Override
     public void onLongPress(MotionEvent e) {
-        if (!isRefreshing) {
+        if (!isShowLoading) {
             super.onLongPress(e);
         }
     }
