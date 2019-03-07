@@ -1050,8 +1050,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     public void notifyChanged() {
         if (1f == canvasTranslateX) {
             setTranslatedX(-(getDataLength() - width));
-        } else {
-            setTranslatedX(canvasTranslateX);
         }
         invalidate();
     }
@@ -1269,6 +1267,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             float value = (float) mAnimator.getAnimatedValue();
             this.screenRightIndex = screenLeftIndex + Math.round(value * (this.screenRightIndex - screenLeftIndex));
         }
+        setTranslatedX(canvasTranslateX);
     }
 
     public int indexOfTranslateX(float translateX) {
