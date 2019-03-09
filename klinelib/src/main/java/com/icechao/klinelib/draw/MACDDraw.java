@@ -89,6 +89,16 @@ public class MACDDraw implements IChartDraw<IMACD> {
 
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     /**
      * 画macd
      *

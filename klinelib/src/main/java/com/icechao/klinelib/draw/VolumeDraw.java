@@ -215,6 +215,16 @@ public class VolumeDraw implements IChartDraw<IVolume> {
         }
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     public void setMinuteColor(int color) {
         linePaint.setColor(color);
     }

@@ -74,4 +74,8 @@ public interface IChartDraw<T> {
      * @param view
      */
     void startAnim(ICandle item, BaseKLineChartView view);
+
+    void setValueFormatter(IValueFormatter valueFormatter);
+
+    void resetValues();
 }

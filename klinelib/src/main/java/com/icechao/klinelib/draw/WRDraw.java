@@ -76,6 +76,16 @@ public class WRDraw implements IChartDraw<IWR> {
 
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     /**
      * 设置%R颜色
      */

@@ -4,7 +4,6 @@ import com.icechao.klinelib.base.BaseKLineChartAdapter;
 import com.icechao.klinelib.entity.KLineEntity;
 import com.icechao.klinelib.utils.DataHelper;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,12 +13,7 @@ import java.util.List;
  * Created by tifezh on 2016/6/18.
  */
 public class KLineChartAdapter extends BaseKLineChartAdapter {
-
-    private SimpleDateFormat dateFormatter = new SimpleDateFormat("mm/dd");
-
-    public void setDateFormatter(SimpleDateFormat dateFormatter) {
-        this.dateFormatter = dateFormatter;
-    }
+    private KLineEntity lastData;
 
 
     private List<KLineEntity> datas = new ArrayList<>();
@@ -34,16 +28,22 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
-        if (datas.size() == 0 || position < 0) {
-            return null;
+    public KLineEntity getItem(int position) {
+        try {
+            int size = datas.size();
+            if (size == 0 || position < 0 || position > size) {
+                return null;
+            }
+            return datas.get(position);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return datas.get(position);
+        return null;
     }
 
     @Override
-    public String getDate(int position) {
-        return dateFormatter.format(new Date(datas.get(position).getDate()));
+    public Date getDate(int position) {
+        return new Date(datas.get(position).getDate());
     }
 
     /**
@@ -51,26 +51,32 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
      */
     public void addHeaderData(List<KLineEntity> data) {
         if (null != data && !data.isEmpty()) {
-            notifyDataWillChanged();
             datas.clear();
             datas.addAll(data);
+        }
+    }
+
+
+    public void resetData(List<KLineEntity> data) {
+
+        notifyDataWillChanged();
+        if (null != data && data.size() > 0) {
+            datas.addAll(data);
+            this.lastData = data.get(data.size() - 1);
+            notifyDataSetChanged();
         }
     }
 
     /**
      * 向尾部添加数据
      */
-    public void resetData(List<KLineEntity> data) {
-        notifyDataWillChanged();
-        datas = data;
-        DataHelper.calculate(datas);
-    }
-
+    @Override
     public void addLast(KLineEntity entity) {
-
         if (null != entity) {
-            datas.add(datas.size(), entity);
+            datas.add(entity);
             DataHelper.calculate(datas);
+            this.lastData = datas.get(datas.size() - 1);
+            notifyDataSetChanged();
         }
     }
 
@@ -81,10 +87,7 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
      * @return 最后一根线的bean
      */
     public KLineEntity getLastData() {
-        if (null != datas) {
-            return datas.get(datas.size() - 1);
-        }
-        return null;
+        return lastData;
     }
 
     /**
@@ -93,8 +96,8 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
      * @param position 索引值
      */
     public void changeItem(int position, KLineEntity data) {
-        notifyDataWillChanged();
         datas.set(position, data);
+        this.lastData = datas.get(datas.size() - 1);
         DataHelper.calculate(datas);
         notifyDataSetChanged();
     }
@@ -103,8 +106,12 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
      * 数据清除
      */
     public void clearData() {
-        notifyDataWillChanged();
         datas.clear();
+        lastData = null;
         notifyDataSetChanged();
+    }
+
+    public List<KLineEntity> getData() {
+        return datas;
     }
 }

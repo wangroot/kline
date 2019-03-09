@@ -517,6 +517,16 @@ public class MainDraw implements IChartDraw<ICandle> {
         }
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     public void setMarketInfoText(String[] marketInfoText) {
         this.marketInfoText = marketInfoText;
     }

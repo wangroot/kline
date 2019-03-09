@@ -85,6 +85,16 @@ public class KDJDraw implements IChartDraw<IKDJ> {
 
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     /**
      * 设置K颜色
      */

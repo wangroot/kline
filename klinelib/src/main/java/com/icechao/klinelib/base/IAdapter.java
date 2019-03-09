@@ -2,6 +2,10 @@ package com.icechao.klinelib.base;
 
 import android.database.DataSetObserver;
 
+import com.icechao.klinelib.entity.KLineEntity;
+
+import java.util.Date;
+
 /*************************************************************************
  * Description   :
  *
@@ -35,7 +39,7 @@ public interface IAdapter<T> {
      * @param position
      * @return
      */
-    String getDate(int position);
+    Date getDate(int position);
 
     /**
      * 注册一个数据观察者
@@ -60,4 +64,7 @@ public interface IAdapter<T> {
      * 数据即将发生变化时调用
      */
     void notifyDataWillChanged();
+
+
+    void addLast(KLineEntity entity);
 }

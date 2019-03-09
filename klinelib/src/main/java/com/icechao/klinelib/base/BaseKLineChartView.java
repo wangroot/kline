@@ -1,7 +1,6 @@
 package com.icechao.klinelib.base;
 
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Canvas;
@@ -19,11 +18,13 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
 import com.icechao.klinelib.R;
+import com.icechao.klinelib.adapter.KLineChartAdapter;
 import com.icechao.klinelib.draw.MainDraw;
 import com.icechao.klinelib.draw.Status;
 import com.icechao.klinelib.draw.VolumeDraw;
 import com.icechao.klinelib.entity.ICandle;
 import com.icechao.klinelib.entity.IKLine;
+import com.icechao.klinelib.formatter.DateFormatter;
 import com.icechao.klinelib.formatter.TimeFormatter;
 import com.icechao.klinelib.formatter.ValueFormatter;
 import com.icechao.klinelib.utils.ViewUtil;
@@ -35,7 +36,7 @@ import java.util.List;
 /*************************************************************************
  * Description   : 去掉所有的Invalidate调用,只在价格发生变化时动画变化,或者显示分时线时分一直刷新页面
  *
- * @PackageName  : com.icechao.klinelib.utils
+ * @PackageName  : com.huobi.klinelib.utils
  * @FileName     : ViewUtil.java
  * @Author       : chao
  * @Date         : 2019/1/8
@@ -44,7 +45,9 @@ import java.util.List;
  *************************************************************************/
 public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
-   
+    //是否以动画的方式绘制最后一根线
+    private boolean isAnimationLast = true;
+
     /**
      * 是否正在显示loading
      */
@@ -281,7 +284,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         mainDraw.resetValues();
         mainDraw.resetValues();
         volDraw.resetValues();
-//        setTranslatedX(1f);
     }
 
     /**
@@ -328,11 +330,22 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
         @Override
         public void onInvalidated() {
-
+            canvasTranslateX = 1f;
+            isAnimationLast = false;
+            postDelayed(action, 1000);
         }
     };
     private float selectedPointRadius = 5;
 
+    /**
+     * 当重置数据时,延时1s显示最后的加载动画
+     */
+    Runnable action = new Runnable() {
+        @Override
+        public void run() {
+            isAnimationLast = true;
+        }
+    };
 
     /**
      * 执行动画渐变
@@ -884,7 +897,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     private void drawPriceLine(Canvas canvas) {
         float y = getMainY(lastPrice);
-        @SuppressLint("DefaultLocale") String priceString = String.format("%.2f", lastPrice);
+        String priceString = getValueFormatter().format(y);
         //多加2个像素防止文字宽度有小的变化
         float textWidth = textPaint.measureText(priceString);
         float textLeft = width - textWidth;
@@ -907,7 +920,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                 canvas.drawCircle(endLineRight, y, lineEndPointWidth, lineEndFillPointPaint);
             }
         } else {
-            float halfPriceBoxHeight = priceLineBoxHeight / 2;
+            float halfPriceBoxHeight = priceLineBoxHeight >> 1;
             //修改价格信息框Y轴计算保证,只会绘制在主区域中
             if (lastPrice > mainMaxValue) {
                 y = mainRect.top + halfPriceBoxHeight;
@@ -1750,9 +1763,9 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         selectedYColor = color;
     }
 
-    float textHeight;
-    float baseLine;
-    float textDecent;
+    private float textHeight;
+    private float baseLine;
+    private float textDecent;
 
     /**
      * 设置文字大小
@@ -2022,4 +2035,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
 
+    public boolean isAnimationLast() {
+        return isAnimationLast;
+    }
 }

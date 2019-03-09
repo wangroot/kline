@@ -41,7 +41,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     private View masterOperater;
     private View moreIndex;
     private View klineOperater;
-//    private ReqBean klineReq;
+    //    private ReqBean klineReq;
     private DepthFullView depthFullView;
 
 
@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
 
     private void initData() {
         List<KLineEntity> all = DataRequest.getALL(this);
-        adapter.resetData(all.subList(0, 40));
+        adapter.resetData(all);
         adapter.notifyDataSetChanged();
     }
 

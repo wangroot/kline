@@ -78,6 +78,16 @@ public class RSIDraw implements IChartDraw<IRSI> {
 
     }
 
+    @Override
+    public void setValueFormatter(IValueFormatter valueFormatter) {
+
+    }
+
+    @Override
+    public void resetValues() {
+
+    }
+
     public void setRSI1Color(int color) {
         mRSI1Paint.setColor(color);
     }
