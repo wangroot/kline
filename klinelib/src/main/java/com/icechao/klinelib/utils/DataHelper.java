@@ -16,8 +16,7 @@ import java.util.List;
  *************************************************************************/
 public class DataHelper {
 
-
-    /**
+/**
      * 计算  重构:计算方法,过多循环~  把循环尽量放到一个循环种加快计算速度
      *
      * @param dataList
@@ -45,9 +44,9 @@ public class DataHelper {
         float volumeMaThree = 0;
 
 
-        Float rsi;
-        float rsiABSEma = 0;
-        float rsiMaxEma = 0;
+        double rsi;
+        double rsiMaxEma;
+        double rsiABSEma;
 
 
         float k = 0;
@@ -57,10 +56,8 @@ public class DataHelper {
 
 
         for (int i = 0; i < dataList.size(); i++) {
-
-
             KLineEntity point = dataList.get(i);
-            final float closePrice = point.getClosePrice();
+            float closePrice = point.getClosePrice();
             //ma计算
             ma5 += closePrice;
             ma10 += closePrice;
@@ -72,7 +69,7 @@ public class DataHelper {
                 ma5 -= dataList.get((int) (i - priceMaOne)).getClosePrice();
                 point.maOne = ma5 / priceMaOne;
             } else {
-                point.maOne = 0f;
+                point.maOne = Float.MIN_VALUE;
             }
             if (i == priceMaTwo - 1) {
                 point.maTwo = ma10 / priceMaTwo;
@@ -80,7 +77,7 @@ public class DataHelper {
                 ma10 -= dataList.get((int) (i - priceMaTwo)).getClosePrice();
                 point.maTwo = ma10 / priceMaTwo;
             } else {
-                point.maTwo = 0f;
+                point.maTwo = Float.MIN_VALUE;
             }
             if (i == priceMaThree - 1) {
                 point.maThree = ma20 / priceMaThree;
@@ -88,7 +85,7 @@ public class DataHelper {
                 ma20 -= dataList.get((int) (i - priceMaThree)).getClosePrice();
                 point.maThree = ma20 / priceMaThree;
             } else {
-                point.maThree = 0f;
+                point.maThree = Float.MIN_VALUE;
             }
             if (i == bollP - 1) {
                 point.bollMa = ma30 / bollP;
@@ -96,7 +93,7 @@ public class DataHelper {
                 ma30 -= dataList.get((int) (i - bollP)).getClosePrice();
                 point.bollMa = ma30 / bollP;
             } else {
-                point.bollMa = 0f;
+                point.bollMa = 0;
             }
 
 
@@ -153,7 +150,7 @@ public class DataHelper {
                 volumeMaOne -= dataList.get((int) (i - maOne)).getVolume();
                 point.MA5Volume = volumeMaOne / maOne;
             } else {
-                point.MA5Volume = 0f;
+                point.MA5Volume = Float.MIN_VALUE;
             }
 
             if (i == maTwo - 1) {
@@ -162,7 +159,7 @@ public class DataHelper {
                 volumeMaTwo -= dataList.get((int) (i - maTwo)).getVolume();
                 point.MA10Volume = volumeMaTwo / maTwo;
             } else {
-                point.MA10Volume = 0f;
+                point.MA10Volume = Float.MIN_VALUE;
             }
 
             if (i == maThree - 1) {
@@ -171,59 +168,70 @@ public class DataHelper {
                 volumeMaThree -= dataList.get((int) (i - maThree)).getVolume();
                 point.MAVolume = volumeMaThree / maThree;
             } else {
-                point.MAVolume = 0f;
+                point.MAVolume = Float.MIN_VALUE;
             }
 
 
-            if (i == 0) {
-                rsi = 0f;
-                rsiABSEma = 0;
+//            以14日RSI指标为例，从当起算，倒推包括当日在内的15个收盘价，以每一日的收盘价减去上一日的收盘价，得到14个数值，这些数值有正有负。这样，RSI指标的计算公式具体如下：
+//
+//            A=14个数字中正数之和
+//                    B=14个数字中负数之和乘以（-1）
+//            RSI（14）=A÷（A＋B）×100
+            if (i == 0 || i < rsiDay) {
+                rsi = Float.MIN_VALUE;
+            } else {
+
                 rsiMaxEma = 0;
-            } else {
-                float Rmax = Math.max(0, closePrice - dataList.get(i - 1).getClosePrice());
-                float RAbs = Math.abs(closePrice - dataList.get(i - 1).getClosePrice());
+                rsiABSEma = 0;
 
-                rsiMaxEma = (Rmax + (rsiDay - 1) * rsiMaxEma) / rsiDay;
-                rsiABSEma = (RAbs + (rsiDay - 1) * rsiABSEma) / rsiDay;
-                rsi = (rsiMaxEma / rsiABSEma) * 100;
+                for (int j = i - 1; j > i - rsiDay; j--) {
+                    double v = dataList.get(j + 1).getClosePrice() - dataList.get(j).getClosePrice();
+                    if (v > 0) {
+                        rsiMaxEma += v;
+                    } else {
+                        rsiABSEma += v;
+                    }
+                }
+                rsi = rsiMaxEma / (rsiMaxEma - rsiABSEma) * 100f;
             }
-            if (i < rsiDay - 1) {
-                rsi = 0f;
-            }
-            if (rsi.isNaN())
-                rsi = 0f;
-            point.rsi = rsi;
+            point.rOne = (float) rsi;
 
-            int startIndex = i - kdjDay - 1;
-            if (startIndex < 0) {
-                startIndex = 0;
-            }
-            float maxRsi = Float.MIN_VALUE;
-            float minRsi = Float.MAX_VALUE;
-            for (int index = startIndex; index <= i; index++) {
-                maxRsi = Math.max(maxRsi, dataList.get(index).getHighPrice());
-                minRsi = Math.min(minRsi, dataList.get(index).getLowPrice());
-            }
-            Float rsv = 100f * (closePrice - minRsi) / (maxRsi - minRsi);
-            if (rsv.isNaN()) {
-                rsv = 0f;
-            }
-            if (i == 0) {
-                k = 50;
-                d = 50;
-            } else {
-                k = (rsv + 2f * k) / 3f;
-                d = (k + 2f * d) / 3f;
-            }
+
+//            kdj
             if (i < kdjDay - 1) {
-                point.k = 0f;
-                point.d = 0f;
-                point.j = 0f;
-            } else if (i == kdjDay - 1 || i == kdjDay) {
-                point.k = k;
-                point.d = 0f;
-                point.j = 0f;
+                point.k = Float.MIN_VALUE;
+                point.d = Float.MIN_VALUE;
+                point.j = Float.MIN_VALUE;
             } else {
+
+//              KDJ是随机指标，计算比较复杂，首先要计算周期（n日、n周等）的RSV值，即未成熟随机指标值，然后再计算K值、D值、J值等。以n日KDJ数值的计算为例，其计算公式为
+                int startIndex = i - kdjDay + 1;
+                float maxRsi = Float.MIN_VALUE;
+                float minRsi = Float.MAX_VALUE;
+                for (int index = startIndex; index <= i; index++) {
+                    maxRsi = Math.max(maxRsi, dataList.get(index).getHighPrice());
+                    minRsi = Math.min(minRsi, dataList.get(index).getLowPrice());
+                }
+//                n日RSV=（Cn－Ln）/（Hn－Ln）×100
+//                公式中，Cn为第n日收盘价；Ln为n日内的最低价；Hn为n日内的最高价。
+                Float rsv = null;
+                try {
+                    rsv = 100f * (closePrice - minRsi) / (maxRsi - minRsi);
+                } catch (Exception e) {
+                    rsv = 0f;
+                }
+//                    计算K值与D值：
+//                    当日K值=2/3×前一日K值+1/3×当日RSV
+                KLineEntity kLineEntity = dataList.get(i - 1);
+                float k1 = kLineEntity.getK();
+                k = 2f / 3f * (k1 == Float.MIN_VALUE ? 50 : k1) + 1f / 3f * rsv;
+//                            当日D值=2/3×前一日D值+1/3×当日K值
+                float d1 = kLineEntity.getD();
+                d = 2f / 3f * (d1 == Float.MIN_VALUE ? 50 : d1) + 1f / 3f * k;
+//                    若无前一日K 值与D值，则可分别用50来代替。
+//                    J值=3*当日K值-2*当日D值
+
+
                 point.k = k;
                 point.d = d;
                 point.j = 3f * k - 2 * d;
@@ -231,67 +239,67 @@ public class DataHelper {
 
 
             //wr
-            int startIndexOne = i - one;
-            int startIndexTwo = i - two;
-            int startIndexThree = i - three;
-            if (startIndexOne < 0) {
-                startIndexOne = 0;
-            }
-            if (startIndexTwo < 0) {
-                startIndexTwo = 0;
-            }
-            if (startIndexThree < 0) {
-                startIndexThree = 0;
-            }
-            float maxWr = Float.MIN_VALUE;
-            float minWr = Float.MAX_VALUE;
-            for (int index = startIndexOne; index <= i; index++) {
-                maxWr = Math.max(maxWr, dataList.get(index).getHighPrice());
-                minWr = Math.min(minWr, dataList.get(index).getLowPrice());
-            }
+//            W%R=（Hn—C）÷（Hn—Ln）×100
+//            其中：C为计算日的收盘价，Ln为N周期内的最低价，Hn为N周期内的最高价，公式中的N为选定的计算时间参数，一般为4或14。
+//            以计算周期为14日为例，其计算过程如下：
+//            W%R（14日）=（H14—C）÷（H14—L14）×100
+//            其中，C为第14天的收盘价，H14为14日内的最高价，L14为14日内的最低价。
+
 
             if (i < one - 1) {
-                point.rOne = Float.NaN;
+                r = Float.MIN_VALUE;
             } else {
-                r = -100 * (maxWr - dataList.get(i).getClosePrice()) / (maxWr - minWr);
-                if (r.isNaN()) {
-                    point.rOne = 0f;
-                } else {
-                    point.rOne = r;
+                int startIndexOne = i - one + 1;
+                float maxWr = Float.MIN_VALUE;
+                float minWr = Float.MAX_VALUE;
+                for (int index = startIndexOne; index <= i; index++) {
+                    maxWr = Math.max(maxWr, dataList.get(index).getHighPrice());
+                    minWr = Math.min(minWr, dataList.get(index).getLowPrice());
+                }
+
+                try {
+                    r = 100 * (maxWr - dataList.get(i).getClosePrice()) / (maxWr - minWr);
+                } catch (Exception e) {
+                    r = 0f;
                 }
             }
-            float maxTwo = Float.MIN_VALUE;
-            float minTwo = Float.MAX_VALUE;
-            for (int index = startIndexTwo; index <= i; index++) {
-                maxTwo = Math.max(maxTwo, dataList.get(index).getHighPrice());
-                minTwo = Math.min(minTwo, dataList.get(index).getLowPrice());
-            }
+            point.wrOne = r;
+
             if (i < two - 1) {
-                point.rTwo = Float.NaN;
+                r = Float.MIN_VALUE;
             } else {
-                r = -100 * (maxTwo - dataList.get(i).getClosePrice()) / (maxTwo - minTwo);
-                if (r.isNaN()) {
-                    point.rTwo = 0f;
-                } else {
-                    point.rTwo = r;
+                int startIndexTwo = i - two + 1;
+                float maxTwo = Float.MIN_VALUE;
+                float minTwo = Float.MAX_VALUE;
+                for (int index = startIndexTwo; index <= i; index++) {
+                    maxTwo = Math.max(maxTwo, dataList.get(index).getHighPrice());
+                    minTwo = Math.min(minTwo, dataList.get(index).getLowPrice());
+                }
+                try {
+                    r = 100 * (maxTwo - dataList.get(i).getClosePrice()) / (maxTwo - minTwo);
+                } catch (Exception e) {
+                    r = 0f;
                 }
             }
-            float maxThree = Float.MIN_VALUE;
-            float minTree = Float.MAX_VALUE;
-            for (int index = startIndexThree; index <= i; index++) {
-                maxThree = Math.max(maxThree, dataList.get(index).getHighPrice());
-                minTree = Math.min(minTree, dataList.get(index).getLowPrice());
-            }
+            point.wrTwo = r;
+
             if (i < three - 1) {
-                point.rThree = Float.NaN;
+                r = Float.MIN_VALUE;
             } else {
-                r = -100 * (maxThree - dataList.get(i).getClosePrice()) / (maxThree - minTree);
-                if (r.isNaN()) {
-                    point.rThree = 0f;
-                } else {
-                    point.rThree = r;
+                int startIndexThree = i - three + 1;
+                float maxThree = Float.MIN_VALUE;
+                float minTree = Float.MAX_VALUE;
+                for (int index = startIndexThree; index <= i; index++) {
+                    maxThree = Math.max(maxThree, dataList.get(index).getHighPrice());
+                    minTree = Math.min(minTree, dataList.get(index).getLowPrice());
+                }
+                try {
+                    r = 100 * (maxThree - dataList.get(i).getClosePrice()) / (maxThree - minTree);
+                } catch (Exception e) {
+                    r = 0f;
                 }
             }
+            point.wrThree = r;
         }
     }
 
