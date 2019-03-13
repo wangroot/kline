@@ -1,6 +1,7 @@
 package com.icechao.klinelib.base;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Canvas;
@@ -27,6 +28,7 @@ import com.icechao.klinelib.entity.IKLine;
 import com.icechao.klinelib.formatter.DateFormatter;
 import com.icechao.klinelib.formatter.TimeFormatter;
 import com.icechao.klinelib.formatter.ValueFormatter;
+import com.icechao.klinelib.utils.NumberUtil;
 import com.icechao.klinelib.utils.ViewUtil;
 
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ import java.util.List;
 public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     //是否以动画的方式绘制最后一根线
-    private boolean isAnimationLast = true;
+    protected boolean isAnimationLast = true;
 
     /**
      * 是否正在显示loading
@@ -281,9 +283,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         itemsCount = 0;
         screenLeftIndex = 0;
         screenRightIndex = 0;
-        mainDraw.resetValues();
-        mainDraw.resetValues();
-        volDraw.resetValues();
     }
 
     /**
@@ -325,14 +324,16 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                     }
                 }
             }
+
             notifyChanged();
         }
 
         @Override
         public void onInvalidated() {
-            canvasTranslateX = 1f;
             isAnimationLast = false;
-            postDelayed(action, 1000);
+            setItemCount(0);
+            canvasTranslateX = 1f;
+            postDelayed(action, 500);
         }
     };
     private float selectedPointRadius = 5;
@@ -340,12 +341,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 当重置数据时,延时1s显示最后的加载动画
      */
-    Runnable action = new Runnable() {
-        @Override
-        public void run() {
-            isAnimationLast = true;
-        }
-    };
+    protected Runnable action = () -> isAnimationLast = true;
 
     /**
      * 执行动画渐变
@@ -355,25 +351,19 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      * @param vol
      */
     private void excuteAnimChange(ICandle item, float closePrice, float vol) {
-        generaterAnimator(lastVol, vol, new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                lastVol = (Float) animation.getAnimatedValue();
-            }
-        });
+        generaterAnimator(lastVol, vol, animation -> lastVol = (Float) animation.getAnimatedValue());
 
-        generaterAnimator(lastPrice, closePrice, new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                lastPrice = (Float) animation.getAnimatedValue();
-                if (isLine) {
-                    return;
-                }
-                animValidate();
+        generaterAnimator(lastPrice, closePrice, animation -> {
+            lastPrice = (Float) animation.getAnimatedValue();
+            if (isLine) {
+                return;
             }
+            animValidate();
         });
-        mainDraw.startAnim(item, BaseKLineChartView.this);
-        volDraw.startAnim(item, BaseKLineChartView.this);
+        if (isAnimationLast) {
+            mainDraw.startAnim(item, BaseKLineChartView.this);
+            volDraw.startAnim(item, BaseKLineChartView.this);
+        }
     }
 
     /**
@@ -564,12 +554,15 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
             drawGird(canvas);
 
-            drawK(canvas);
-
-            drawText(canvas);
-
-            drawPriceLine(canvas);
-
+            if (isLine) {
+                drawK(canvas);
+                drawText(canvas);
+                drawPriceLine(canvas);
+            } else {
+                drawPriceLine(canvas);
+                drawK(canvas);
+                drawText(canvas);
+            }
             drawValue(canvas, isLongPress ? selectedIndex : screenRightIndex);
 
         } catch (Exception e) {
@@ -623,7 +616,16 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             this.itemsCount = itemCount;
         }
         mainDraw.setItemCount(itemsCount);
+        mainDraw.resetValues();
         volDraw.setItemCount(itemsCount);
+        volDraw.resetValues();
+        int size = mChildDraws.size();
+        for (int i = 0; i < size; i++) {
+            IChartDraw iChartDraw = mChildDraws.get(i);
+            iChartDraw.setItemCount(0);
+            iChartDraw.resetValues();
+        }
+        invalidate();
     }
 
     /**
@@ -767,7 +769,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
 
         //交易量图的Y轴label
-        String maxVol = volDraw.getValueFormatter().format(volMaxValue);
+        String maxVol = NumberUtil.getTradeMarketAmount(volDraw.getValueFormatter().format(volMaxValue));
         canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
 
         //子图Y轴label
@@ -897,7 +899,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     private void drawPriceLine(Canvas canvas) {
         float y = getMainY(lastPrice);
-        String priceString = getValueFormatter().format(y);
+        String priceString = getValueFormatter().format(lastPrice);
         //多加2个像素防止文字宽度有小的变化
         float textWidth = textPaint.measureText(priceString);
         float textLeft = width - textWidth;
@@ -1148,8 +1150,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     protected void onScaleChanged(float scale, float oldScale) {
         //通过 放大和左右左右个数设置左移
         float tempWidth = chartItemWidth * scale;
-        float newCount = (width / tempWidth);
-        float oldCount = (width / chartItemWidth / oldScale);
+        float newCount = (width / tempWidth) - 0.5f;
+        float oldCount = (width / chartItemWidth / oldScale) - 0.5f;
         float difCount = (newCount - oldCount) / 2;
         setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
         super.onScaleChanged(scale, oldScale);
@@ -1256,9 +1258,10 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             volMaxValue = 15.00f;
         }
 
-        if (Math.abs(childMaxValue) < 0.01 && Math.abs(mChildMinValue) < 0.01) {
-            childMaxValue = 1f;
-        } else if (childMaxValue.equals(mChildMinValue)) {
+//        if (Math.abs(childMaxValue) < 0.01 && Math.abs(mChildMinValue) < 0.01) {
+//            childMaxValue = 1f;
+//        } else
+        if (childMaxValue.equals(mChildMinValue)) {
             //当最大值和最小值都相等的时候 分别增大最大值和 减小最小值
             childMaxValue += Math.abs(childMaxValue * 0.05f);
             mChildMinValue -= Math.abs(mChildMinValue * 0.05f);
@@ -1890,12 +1893,22 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     public ValueAnimator generaterAnimator(Float start, float end, ValueAnimator.AnimatorUpdateListener listener) {
         ValueAnimator animator = ValueAnimator.ofFloat(0 == start ? end - 0.01f : start, end);
         animator.setDuration(duration);
-        animator.addUpdateListener(listener);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                if (isAnimationLast) {
+                    listener.onAnimationUpdate(valueAnimator);
+                }
+            }
+        });
         animator.start();
         return animator;
     }
 
     public void setShowLine(boolean isLine) {
+        if (isLine != this.isLine) {
+            setItemCount(0);
+        }
         if (isLine && getX(screenRightIndex) + canvasTranslateX <= width) {
             startFreshPage();
         } else {

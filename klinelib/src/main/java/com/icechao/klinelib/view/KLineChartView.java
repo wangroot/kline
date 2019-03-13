@@ -182,6 +182,7 @@ public class KLineChartView extends BaseKLineChartView {
     public void showLoading() {
         if (null != mProgressBar) {
             mProgressBar.setVisibility(View.VISIBLE);
+            isAnimationLast = false;
         }
     }
 
