@@ -24,7 +24,7 @@ public class DataHelper {
      */
     static void calculate(List<KLineEntity> dataList, float bollP, int bollN,
                           float priceMaOne, float priceMaTwo, float priceMaThree,
-                          float macdEma1, float macdEma2, float macddDif,
+                          int s, int l, int m,
                           float maOne, float maTwo, float maThree,
                           int rsiDay,
                           int kdjDay,
@@ -34,11 +34,11 @@ public class DataHelper {
         float ma20 = 0;
         float ma30 = 0;
 
-        float ema12 = 0;
-        float ema26 = 0;
-        float dif = 0;
-        float dea = 0;
-        float macd = 0;
+        float preEma12 = 0;
+        float preEma26 = 0;
+
+        float preDea = 0;
+
 
         float volumeMaOne = 0;
         float volumeMaTwo = 0;
@@ -100,26 +100,45 @@ public class DataHelper {
             }
 
 
-            //macd计算
-            if (0 == i) {
-                ema12 = closePrice;
-                ema26 = closePrice;
-            } else {
-                // EMA（12） = 前一日EMA（12） X 11/13 + 今日收盘价 X 2/13
-                ema12 = ema12 * (macdEma1 - 1) / (macdEma1 + 1) + closePrice * 2f / (macdEma1 + 1);
-                // EMA（26） = 前一日EMA（26） X 25/27 + 今日收盘价 X 2/27
-                ema26 = ema26 * (macdEma2 - 1) / (macdEma2 + 1) + closePrice * 2f / (macdEma2 + 1);
-            }
-            // DIF = EMA（12） - EMA（26） 。
-            // 今日DEA = （前一日DEA X 8/10 + 今日DIF X 2/10）
-            // 用（DIF-DEA）*2即为MACD柱状图。
-            dif = ema12 - ema26;
-            dea = dea * (macddDif - 1) / (macddDif + 1) + dif * 2f / (macddDif + 1);
-            macd = (dif - dea) * 2f;
-            point.dif = dif;
-            point.dea = dea;
-            point.macd = macd;
+            if (dataList.size() >= m + l - 2) {
+                if (i < l - 1) {
+                    dataList.get(i).dif = (0);
+                }
 
+                if (i >= s - 1) {
+                    float ema12 = calculateEMA(dataList, s, i, preEma12);
+                    preEma12 = ema12;
+                    if (i >= l - 1) {
+                        float ema26 = calculateEMA(dataList, l, i, preEma26);
+                        preEma26 = ema26;
+                        point.dif = (ema12 - ema26);
+                    } else {
+                        point.dif = Float.MIN_VALUE;
+                    }
+                } else {
+                    point.dif = Float.MIN_VALUE;
+                }
+
+
+                if (i >= m + l - 2) {
+                    boolean isFirst = i == m + l - 2;
+                    float dea = calculateDEA(dataList, l, m, i, preDea, isFirst);
+                    preDea = dea;
+                    point.dea = (dea);
+                } else {
+                    point.dea = Float.MIN_VALUE;
+                }
+
+
+                if (i >= m + l - 2) {
+                    point.macd = point.getDif() - point.getDea();
+                } else {
+                    point.macd = 0;
+                }
+
+            } else {
+                point.macd = 0;
+            }
 
             //boll计算
             if (i < bollP - 1) {
@@ -131,8 +150,8 @@ public class DataHelper {
                 float md = 0;
                 for (int j = i - n + 1; j <= i; j++) {
                     float c = dataList.get(j).getClosePrice();
-                    float m = point.getBollMa();
-                    float value = c - m;
+                    float mm = point.getBollMa();
+                    float value = c - mm;
                     md += value * value;
                 }
                 md = md / (n - 1);
@@ -308,5 +327,61 @@ public class DataHelper {
                 14,
                 14,
                 14, 0, 0);
+    }
+
+
+    /**
+     * 计算ema指标
+     *
+     * @param n      s或l
+     * @param index  index
+     * @param preEma 上一个ema
+     * @return ema
+     */
+    private static float calculateEMA(List<KLineEntity> list, int n, int index, float preEma) {
+        float y = 0;
+        try {
+            if (index + 1 < n) {
+                return y;
+            } else if (index + 1 == n) {
+                for (int i = 0; i < n; i++) {
+                    y += list.get(i).Close;
+                }
+                return y / n;
+            } else {
+                return (float) ((preEma * (n - 1) + list.get(index).Close * 2) / (n + 1));
+            }
+        } catch (Exception e) {
+            return y;
+        }
+    }
+
+    /**
+     * 计算DEA
+     *
+     * @param list    列表
+     * @param l       L26
+     * @param m       M9
+     * @param index   index
+     * @param preDea  上一个dea
+     * @param isFirst 是否是第一个
+     * @return dea
+     */
+    private static float calculateDEA(List<KLineEntity> list, int l, int m, int index,
+                                      float preDea,
+                                      boolean isFirst) {
+        float y = 0;
+        try {
+            if (isFirst) {
+                for (int i = l - 1; i <= m + l - 2; i++) {
+                    y += list.get(i).getDif();
+                }
+                return y / m;
+            } else {
+                return (float) ((preDea * (m - 1) + list.get(index).getDif() * 2) / (m + 1));
+            }
+        } catch (Exception e) {
+            return y;
+        }
     }
 }
