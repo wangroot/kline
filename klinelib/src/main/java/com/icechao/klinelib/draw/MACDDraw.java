@@ -44,8 +44,14 @@ public class MACDDraw implements IChartDraw<IMACD> {
     @Override
     public void drawTranslated(@Nullable IMACD lastPoint, @NonNull IMACD curPoint, float lastX, float curX, @NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position) {
         drawMACD(canvas, view, curX, curPoint.getMacd());
-        view.drawChildLine(canvas, mDIFPaint, lastX, lastPoint.getDea(), curX, curPoint.getDea());
-        view.drawChildLine(canvas, mDEAPaint, lastX, lastPoint.getDif(), curX, curPoint.getDif());
+        float dea = lastPoint.getDea();
+        if (Float.MIN_VALUE != dea) {
+            view.drawChildLine(canvas, mDEAPaint, lastX, dea, curX, curPoint.getDea());
+        }
+        float dif = lastPoint.getDif();
+        if (Float.MIN_VALUE != dif) {
+            view.drawChildLine(canvas, mDIFPaint, lastX, dif, curX, curPoint.getDif());
+        }
     }
 
     @Override
@@ -58,10 +64,10 @@ public class MACDDraw implements IChartDraw<IMACD> {
         canvas.drawText(text, x, y, mMACDPaint);
         x += mMACDPaint.measureText(text);
         text = "DIF:" + view.formatValue(point.getDif()) + "  ";
-        canvas.drawText(text, x, y, mDEAPaint);
+        canvas.drawText(text, x, y, mDIFPaint);
         x += mDIFPaint.measureText(text);
         text = "DEA:" + view.formatValue(point.getDea());
-        canvas.drawText(text, x, y, mDIFPaint);
+        canvas.drawText(text, x, y, mDEAPaint);
     }
 
     @Override

@@ -93,11 +93,6 @@ public class KLineEntity implements IKLine {
     }
 
     @Override
-    public Float getrOne() {
-        return rOne;
-    }
-
-    @Override
     public float getRsi() {
         return rsi;
     }
@@ -170,6 +165,10 @@ public class KLineEntity implements IKLine {
     public float rTwo;
     public float rThree;
 
+    public float wrOne;
+    public float wrTwo;
+    public float wrThree;
+
     public float rsi;
 
     public float up;
@@ -185,4 +184,18 @@ public class KLineEntity implements IKLine {
     public float MAVolume;
 
 
+    @Override
+    public float getWrOne() {
+        return wrOne;
+    }
+
+    @Override
+    public float getWrTwo() {
+        return wrTwo;
+    }
+
+    @Override
+    public float getWrThree() {
+        return wrThree;
+    }
 }

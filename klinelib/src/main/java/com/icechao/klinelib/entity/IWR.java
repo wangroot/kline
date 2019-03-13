@@ -12,11 +12,15 @@ import java.io.Serializable;
  * @Email        : icechliu@gmail.com
  * @version      : V1
  *************************************************************************/
-public interface IWR  extends Serializable {
+public interface IWR extends Serializable {
 
     /**
      * %R值
      */
-    Float getrOne();
+    float getWrOne();
+
+    float getWrTwo();
+
+    float getWrThree();
 
 }

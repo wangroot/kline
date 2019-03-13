@@ -34,31 +34,31 @@ public class WRDraw implements IChartDraw<IWR> {
 
     @Override
     public void drawTranslated(@Nullable IWR lastPoint, @NonNull IWR curPoint, float lastX, float curX, @NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position) {
-        if (!Float.isNaN(lastPoint.getrOne())) {
-            view.drawChildLine(canvas, r1Paint, lastX, lastPoint.getrOne(), curX, curPoint.getrOne());
+        if (Float.MIN_VALUE != (lastPoint.getWrOne())) {
+            view.drawChildLine(canvas, r1Paint, lastX, lastPoint.getWrOne(), curX, curPoint.getWrOne());
         }
     }
 
     @Override
     public void drawText(@NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position, float x, float y) {
         IWR point = (IWR) view.getItem(position);
-        if (!Float.isNaN(point.getrOne())) {
+        if (Float.MIN_VALUE != (point.getWrOne())) {
             String text = "WR(14):";
             canvas.drawText(text, x, y, view.getTextPaint());
             x += view.getTextPaint().measureText(text);
-            text = view.formatValue(point.getrOne()) + " ";
+            text = view.formatValue(point.getWrOne()) + " ";
             canvas.drawText(text, x, y, r1Paint);
         }
     }
 
     @Override
     public float getMaxValue(IWR point, Status status) {
-        return point.getrOne();
+        return point.getWrOne();
     }
 
     @Override
     public float getMinValue(IWR point, Status status) {
-        return point.getrOne();
+        return point.getWrOne();
     }
 
     @Override
