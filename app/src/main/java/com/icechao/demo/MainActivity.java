@@ -16,6 +16,7 @@ import com.icechao.klinelib.entity.KLineEntity;
 import com.icechao.klinelib.entity.MarketBuySellItem;
 import com.icechao.klinelib.entity.MarketDepthPercentItem;
 import com.icechao.klinelib.formatter.DateFormatter;
+import com.icechao.klinelib.formatter.ValueFormatter;
 import com.icechao.klinelib.utils.Constants;
 import com.icechao.klinelib.view.KLineChartView;
 
@@ -94,6 +95,18 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         chartView.setDateTimeFormatter(new DateFormatter());
         chartView.setGridColumns(5);
         chartView.setGridRows(5);
+        chartView.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String format(float value) {
+                return String.format("%.2f", value);
+            }
+        });
+        chartView.getVolDraw().setValueFormatter(new ValueFormatter() {
+            @Override
+            public String format(float value) {
+                return String.format("%.2f", value);
+            }
+        });
         chartView.setOverScrollRange(getWindowManager().getDefaultDisplay().getWidth() / 5);
 
     }
@@ -105,7 +118,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 SystemClock.sleep(1000);
                 runOnUiThread(() -> {
                     List<KLineEntity> all = DataRequest.getALL(MainActivity.this);
-                    adapter.resetData(all);
+                    adapter.resetData(all.subList(0, 100));
                 });
             }
         }.start();

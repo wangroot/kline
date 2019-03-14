@@ -148,9 +148,9 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
             scaleX = scaleXMin;
         } else if (scaleX > scaleXMax) {
             scaleX = scaleXMax;
-        } else {
-            onScaleChanged(scaleX, oldScale);
         }
+        onScaleChanged(scaleX, oldScale);
+
         return true;
     }
 

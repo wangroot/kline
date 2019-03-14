@@ -1,7 +1,6 @@
 package com.icechao.klinelib.base;
 
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Canvas;
@@ -769,7 +768,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
 
         //交易量图的Y轴label
-        String maxVol = NumberUtil.getTradeMarketAmount(volDraw.getValueFormatter().format(volMaxValue));
+        String maxVol =volDraw.getValueFormatter().format(volMaxValue);
         canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
 
         //子图Y轴label
@@ -1153,9 +1152,12 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     @Override
     protected void onScaleChanged(float scale, float oldScale) {
         //通过 放大和左右左右个数设置左移
+        if (scale == oldScale) {
+            return;
+        }
         float tempWidth = chartItemWidth * scale;
-        float newCount = (width / tempWidth) - 0.5f;
-        float oldCount = (width / chartItemWidth / oldScale) - 0.5f;
+        float newCount = (width / tempWidth) ;
+        float oldCount = (width / chartItemWidth / oldScale);
         float difCount = (newCount - oldCount) / 2;
         setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
         super.onScaleChanged(scale, oldScale);
@@ -1287,7 +1289,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             float value = (float) mAnimator.getAnimatedValue();
             this.screenRightIndex = screenLeftIndex + Math.round(value * (this.screenRightIndex - screenLeftIndex));
         }
-        setTranslatedX(canvasTranslateX);
+
     }
 
     public int indexOfTranslateX(float translateX) {
