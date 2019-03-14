@@ -3,6 +3,7 @@ package com.icechao.demo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.RadioGroup;
@@ -98,9 +99,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     }
 
     private void initData() {
-        List<KLineEntity> all = DataRequest.getALL(this);
-        adapter.resetData(all);
-        adapter.notifyDataSetChanged();
+        new Thread() {
+            @Override
+            public void run() {
+                SystemClock.sleep(1000);
+                runOnUiThread(() -> {
+                    List<KLineEntity> all = DataRequest.getALL(MainActivity.this);
+                    adapter.resetData(all);
+                });
+            }
+        }.start();
     }
 
 

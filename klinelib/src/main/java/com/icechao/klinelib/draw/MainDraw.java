@@ -100,7 +100,7 @@ public class MainDraw implements IChartDraw<ICandle> {
             Status status = view.getStatus();
             if (status == Status.MA) {
                 //画第一根ma
-                if (0 != lastPoint.getMaOne()) {
+                if (Float.MIN_VALUE != lastPoint.getMaOne()) {
                     if (itemCount - 1 == position && 0 != this.maOne) {
                         view.drawLine(canvas, indexPaintOne, lastX, lastPoint.getMaOne(), curX, this.maOne);
                     } else {
@@ -108,7 +108,7 @@ public class MainDraw implements IChartDraw<ICandle> {
                     }
                 }
                 //画第二根ma
-                if (0 != lastPoint.getMaTwo()) {
+                if (Float.MIN_VALUE != lastPoint.getMaTwo()) {
                     if (itemCount - 1 == position && 0 != this.maTwo) {
                         view.drawLine(canvas, indexPaintTwo, lastX, lastPoint.getMaTwo(), curX, this.maTwo);
                     } else {
@@ -116,7 +116,7 @@ public class MainDraw implements IChartDraw<ICandle> {
                     }
                 }
                 //画第三根ma
-                if (0 != lastPoint.getMaThree()) {
+                if (Float.MIN_VALUE != lastPoint.getMaThree()) {
                     if (itemCount - 1 == position && 0 != this.maThree) {
                         view.drawLine(canvas, indexPaintThree, lastX, lastPoint.getMaThree(), curX, this.maThree);
                     } else {
@@ -125,21 +125,21 @@ public class MainDraw implements IChartDraw<ICandle> {
                 }
             } else if (status == Status.BOLL) {
                 //画boll
-                if (0 != lastPoint.getUp()) {
+                if (Float.MIN_VALUE != lastPoint.getUp()) {
                     if (itemCount - 1 == position && 0 != bollUp) {
                         view.drawLine(canvas, indexPaintOne, lastX, lastPoint.getUp(), curX, bollUp);
                     } else {
                         view.drawLine(canvas, indexPaintOne, lastX, lastPoint.getUp(), curX, curPoint.getUp());
                     }
                 }
-                if (0 != lastPoint.getMb()) {
+                if (Float.MIN_VALUE != lastPoint.getMb()) {
                     if (itemCount - 1 == position && 0 != bollMb) {
                         view.drawLine(canvas, indexPaintTwo, lastX, lastPoint.getMb(), curX, bollMb);
                     } else {
                         view.drawLine(canvas, indexPaintTwo, lastX, lastPoint.getMb(), curX, curPoint.getMb());
                     }
                 }
-                if (0 != lastPoint.getDn()) {
+                if (Float.MIN_VALUE != lastPoint.getDn()) {
                     if (itemCount - 1 == position && 0 != bollDn) {
                         view.drawLine(canvas, indexPaintThree, lastX, lastPoint.getDn(), curX, bollDn);
                     } else {
@@ -312,7 +312,7 @@ public class MainDraw implements IChartDraw<ICandle> {
         strings[4] = (String.valueOf(point.getClosePrice()));
         float tempDiffPrice = point.getClosePrice() - point.getOpenPrice();
         strings[5] = (String.valueOf(tempDiffPrice));
-        strings[6] = (String.format("%.2f", (tempDiffPrice) *100 / point.getOpenPrice()) + "%");
+        strings[6] = (String.format("%.2f", (tempDiffPrice) * 100 / point.getOpenPrice()) + "%");
         strings[7] = (String.valueOf(point.getVolume()));
 
         float width = 0, left, top = margin + view.getTopPadding();

@@ -331,8 +331,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         @Override
         public void onInvalidated() {
             isAnimationLast = false;
-            setItemCount(0);
             canvasTranslateX = 1f;
+            setItemCount(0);
             postDelayed(action, 500);
         }
     };
@@ -1063,7 +1063,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
     public void notifyChanged() {
-        if (1f == canvasTranslateX) {
+        if (1f == canvasTranslateX && width != 0) {
             setTranslatedX(-(getDataLength() - width));
         }
         invalidate();
@@ -1114,7 +1114,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     private float getMinTranslate() {
+
         float dataLength = getDataLength();
+        if (width == 0) {
+            width = getMeasuredWidth();
+        }
         if (dataLength >= width) {
             return -(dataLength - width);
         }
