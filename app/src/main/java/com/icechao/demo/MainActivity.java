@@ -118,7 +118,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 SystemClock.sleep(1000);
                 runOnUiThread(() -> {
                     List<KLineEntity> all = DataRequest.getALL(MainActivity.this);
-                    adapter.resetData(all.subList(0, 100));
+                    adapter.resetData(all);
                 });
             }
         }.start();
