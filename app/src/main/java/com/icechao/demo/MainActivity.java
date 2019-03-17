@@ -247,6 +247,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     }
 
 
+    //-----------------------------------------------------------------------------------------//
+    //下面是深度想着的计算
+    //-----------------------------------------------------------------------------------------//
+
     private List<MarketBuySellItem> askList = new ArrayList<>();
 
     private List<MarketBuySellItem> bidList = new ArrayList<>();
@@ -266,6 +270,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         int loop = Math.min(Constants.MARKET_DEPTH_BUY_SELL_NUM, priceAndAmount.size());
         list.clear();
         MarketBuySellItem item;
+
         for (int i = 0; i < loop; i++) {
             item = new MarketBuySellItem();
             item.setTradeType(MarketBuySellItem.MARKET_TRADE);
@@ -298,6 +303,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         int loop = priceAndAmount.size();
         list.clear();
         MarketDepthPercentItem item;
+
+        //订阅websocket得到的深度数据 进行加工
+        //根据不同的需要算法可能需要修改
+
         for (int i = 0; i < loop; i++) {
             item = new MarketDepthPercentItem();
             item.setSymbol(symbol);
@@ -309,8 +318,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         if (type == MarketBuySellItem.BUY_TYPE) {
             Collections.reverse(list);
         }
-
-        LogUtil.e("updatePercentBuySellList");
 
     }
 
