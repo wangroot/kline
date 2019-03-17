@@ -45,6 +45,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     private View klineOperater;
     //    private ReqBean klineReq;
     private DepthFullView depthFullView;
+    private List<KLineEntity> all;
 
 
     @Override
@@ -117,7 +118,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             public void run() {
                 SystemClock.sleep(1000);
                 runOnUiThread(() -> {
-                    List<KLineEntity> all = DataRequest.getALL(MainActivity.this);
+                    all = DataRequest.getALL(MainActivity.this);
                     adapter.resetData(all);
                 });
             }
@@ -153,22 +154,18 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 break;
             case R.id.text_view_macd:
                 chartView.hideSelectData();
-//                chartView.changeMainDrawType(Status.);
                 chartView.setChildDraw(0);
                 break;
             case R.id.text_view_kdj:
                 chartView.hideSelectData();
-//                chartView.changeMainDrawType(Status.);
                 chartView.setChildDraw(1);
                 break;
             case R.id.text_view_rsi:
                 chartView.hideSelectData();
-//                chartView.changeMainDrawType(Status.);
                 chartView.setChildDraw(2);
                 break;
             case R.id.text_view_wr:
                 chartView.hideSelectData();
-//                chartView.changeMainDrawType(Status.);
                 chartView.setChildDraw(3);
                 break;
 
@@ -186,34 +183,29 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             case R.id.radio_button_time_line:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(true);
-//                sendChangedReq(ReqBean.KlineTime.ONEMIN);
+                adapter.resetData(all);
                 break;
             case R.id.radio_button_fifteen:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.FIFTEENMIN);
-
+                adapter.resetData(all);
 
                 break;
             case R.id.radio_button_one_hour:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.ONEHOUR);
-
-
+                adapter.resetData(all);
                 break;
             case R.id.radio_button_four_hour:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-
-//                sendChangedReq(ReqBean.KlineTime.FOURHOUR);
+                adapter.resetData(all);
 
                 break;
             case R.id.radio_button_one_day:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.ONEDAY);
-
+                adapter.resetData(all);
                 break;
             case R.id.radio_button_more:
                 moreIndex.setVisibility(View.VISIBLE);
@@ -227,44 +219,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             case R.id.text_view_one_minute:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.ONEMIN);
-
+                adapter.resetData(all);
                 break;
             case R.id.text_view_five_minute:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.FIVEMIN);
-
+                adapter.resetData(all);
 
                 break;
             case R.id.text_view_half_hour:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.THIRTYMIN);
-
+                adapter.resetData(all);
                 break;
             case R.id.text_view_one_week:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.ONEWEEK);
-
+                adapter.resetData(all);
                 break;
             case R.id.text_view_one_mounth:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-//                sendChangedReq(ReqBean.KlineTime.ONEMON);
-
+                adapter.resetData(all);
                 break;
 
         }
     }
-
-//    private ReqBean.KlineTime time = RequestBean.KlineTime.ONEMIN;
-//
-//    private void sendChangedReq(ReqBean.KlineTime onemon) {
-//
-//
-//    }
 
 
     private List<MarketBuySellItem> askList = new ArrayList<>();
@@ -272,6 +252,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     private List<MarketBuySellItem> bidList = new ArrayList<>();
 
 
+    /**
+     * 买卖数据更新
+     *
+     * @param symbol
+     * @param list
+     * @param priceAndAmount
+     * @param totalList
+     * @param type
+     * @param totalAmount
+     */
     private void updateBuySellList(String symbol, List<MarketBuySellItem> list, List<List<Double>> priceAndAmount, List<Double> totalList, int type, double totalAmount) {
         int loop = Math.min(Constants.MARKET_DEPTH_BUY_SELL_NUM, priceAndAmount.size());
         list.clear();
@@ -295,6 +285,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
 
     }
 
+    /**
+     * 更新深度数据
+     *
+     * @param symbol
+     * @param list
+     * @param priceAndAmount
+     * @param totalList
+     * @param type
+     */
     private void updatePercentBuySellList(String symbol, List<MarketDepthPercentItem> list, List<List<Double>> priceAndAmount, List<Double> totalList, int type) {
         int loop = priceAndAmount.size();
         list.clear();
