@@ -18,7 +18,7 @@ public class KLineEntity implements IKLine {
 
     @Override
     public String getDate() {
-        return Date;
+        return date;
     }
 
     @Override
@@ -28,17 +28,17 @@ public class KLineEntity implements IKLine {
 
     @Override
     public float getHighPrice() {
-        return High;
+        return high;
     }
 
     @Override
     public float getLowPrice() {
-        return Low;
+        return low;
     }
 
     @Override
     public float getClosePrice() {
-        return Close;
+        return close;
     }
 
     @Override
@@ -114,32 +114,32 @@ public class KLineEntity implements IKLine {
 
     @Override
     public float getVolume() {
-        return Volume;
+        return volume;
     }
 
     @Override
-    public float getMA5Volume() {
-        return MA5Volume;
+    public float getMa5Volume() {
+        return ma5Volume;
     }
 
     @Override
-    public float getMA10Volume() {
-        return MA10Volume;
+    public float getMa10Volume() {
+        return ma10Volume;
     }
 
 
-    public String Date;
+    public String date;
 
     @SerializedName("Open")
     public float open;
 
-    public float High;
+    public float high;
 
-    public float Low;
+    public float low;
 
-    public float Close;
+    public float close;
 
-    public float Volume;
+    public float volume;
 
     public float maOne;
 
@@ -177,9 +177,9 @@ public class KLineEntity implements IKLine {
 
     public float dn;
 
-    public float MA5Volume;
+    public float ma5Volume;
 
-    public float MA10Volume;
+    public float ma10Volume;
 
     public float MAVolume;
 

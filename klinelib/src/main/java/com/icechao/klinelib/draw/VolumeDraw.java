@@ -57,18 +57,18 @@ public class VolumeDraw implements IChartDraw<IVolume> {
             @NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position) {
 
         drawHistogram(canvas, curPoint, lastPoint, curX, view, position);
-        if (0f != lastPoint.getMA5Volume()) {
+        if (0f != lastPoint.getMa5Volume()) {
             if (position == mItemCount - 1 && 0 != endMa5) {
-                view.drawVolLine(canvas, ma5Paint, lastX, lastPoint.getMA5Volume(), curX, endMa5);
+                view.drawVolLine(canvas, ma5Paint, lastX, lastPoint.getMa5Volume(), curX, endMa5);
             } else {
-                view.drawVolLine(canvas, ma5Paint, lastX, lastPoint.getMA5Volume(), curX, curPoint.getMA5Volume());
+                view.drawVolLine(canvas, ma5Paint, lastX, lastPoint.getMa5Volume(), curX, curPoint.getMa5Volume());
             }
         }
-        if (0f != lastPoint.getMA10Volume()) {
+        if (0f != lastPoint.getMa10Volume()) {
             if (position == mItemCount - 1 && 0 != endMa10) {
-                view.drawVolLine(canvas, ma10Paint, lastX, lastPoint.getMA10Volume(), curX, endMa10);
+                view.drawVolLine(canvas, ma10Paint, lastX, lastPoint.getMa10Volume(), curX, endMa10);
             } else {
-                view.drawVolLine(canvas, ma10Paint, lastX, lastPoint.getMA10Volume(), curX, curPoint.getMA10Volume());
+                view.drawVolLine(canvas, ma10Paint, lastX, lastPoint.getMa10Volume(), curX, curPoint.getMa10Volume());
             }
         }
     }
@@ -115,21 +115,21 @@ public class VolumeDraw implements IChartDraw<IVolume> {
         }
         canvas.drawText(text, x, y, volLeftPaint);
         x += view.getTextPaint().measureText(text);
-        text = "MA5:" + getValueFormatter().format(point.getMA5Volume()) + "  ";
+        text = "MA5:" + getValueFormatter().format(point.getMa5Volume()) + "  ";
         canvas.drawText(text, x, y, ma5Paint);
         x += ma5Paint.measureText(text);
-        text = "MA10:" + getValueFormatter().format(point.getMA10Volume());
+        text = "MA10:" + getValueFormatter().format(point.getMa10Volume());
         canvas.drawText(text, x, y, ma10Paint);
     }
 
     @Override
     public float getMaxValue(IVolume point, Status status) {
-        return Math.max(point.getVolume(), Math.max(point.getMA5Volume(), point.getMA10Volume()));
+        return Math.max(point.getVolume(), Math.max(point.getMa5Volume(), point.getMa10Volume()));
     }
 
     @Override
     public float getMinValue(IVolume point, Status status) {
-        return Math.min(point.getVolume(), Math.min(point.getMA5Volume(), point.getMA10Volume()));
+        return Math.min(point.getVolume(), Math.min(point.getMa5Volume(), point.getMa10Volume()));
     }
 
     @Override
@@ -197,16 +197,16 @@ public class VolumeDraw implements IChartDraw<IVolume> {
     public void startAnim(ICandle item, BaseKLineChartView view) {
         IVolume volume = (IVolume) item;
         if (0 == endMa5) {
-            endMa5 = volume.getMA5Volume();
-            endMa10 = volume.getMA10Volume();
+            endMa5 = volume.getMa5Volume();
+            endMa10 = volume.getMa10Volume();
         } else {
-            view.generaterAnimator(endMa5, volume.getMA5Volume(), new ValueAnimator.AnimatorUpdateListener() {
+            view.generaterAnimator(endMa5, volume.getMa5Volume(), new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     endMa5 = (float) animation.getAnimatedValue();
                 }
             });
-            view.generaterAnimator(endMa10, volume.getMA10Volume(), new ValueAnimator.AnimatorUpdateListener() {
+            view.generaterAnimator(endMa10, volume.getMa10Volume(), new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     endMa10 = (float) animation.getAnimatedValue();

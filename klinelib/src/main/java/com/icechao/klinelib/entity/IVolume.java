@@ -33,10 +33,10 @@ public interface IVolume  extends Serializable {
     /**
      * 五(月，日，时，分，5分等)均量
      */
-    float getMA5Volume();
+    float getMa5Volume();
 
     /**
      * 十(月，日，时，分，5分等)均量
      */
-    float getMA10Volume();
+    float getMa10Volume();
 }

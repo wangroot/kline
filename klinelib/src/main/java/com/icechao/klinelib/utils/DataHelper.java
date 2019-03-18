@@ -164,21 +164,21 @@ public class DataHelper {
             volumeMaThree += point.getVolume();
 
             if (i == maOne - 1) {
-                point.MA5Volume = (volumeMaOne / maOne);
+                point.ma5Volume = (volumeMaOne / maOne);
             } else if (i > maOne - 1) {
                 volumeMaOne -= dataList.get((int) (i - maOne)).getVolume();
-                point.MA5Volume = volumeMaOne / maOne;
+                point.ma5Volume = volumeMaOne / maOne;
             } else {
-                point.MA5Volume = Float.MIN_VALUE;
+                point.ma5Volume = Float.MIN_VALUE;
             }
 
             if (i == maTwo - 1) {
-                point.MA10Volume = (volumeMaTwo / maTwo);
+                point.ma10Volume = (volumeMaTwo / maTwo);
             } else if (i > maTwo - 1) {
                 volumeMaTwo -= dataList.get((int) (i - maTwo)).getVolume();
-                point.MA10Volume = volumeMaTwo / maTwo;
+                point.ma10Volume = volumeMaTwo / maTwo;
             } else {
-                point.MA10Volume = Float.MIN_VALUE;
+                point.ma10Volume = Float.MIN_VALUE;
             }
 
             if (i == maThree - 1) {
@@ -353,11 +353,11 @@ public class DataHelper {
                 return y;
             } else if (index + 1 == n) {
                 for (int i = 0; i < n; i++) {
-                    y += list.get(i).Close;
+                    y += list.get(i).close;
                 }
                 return y / n;
             } else {
-                return (float) ((preEma * (n - 1) + list.get(index).Close * 2) / (n + 1));
+                return (float) ((preEma * (n - 1) + list.get(index).close * 2) / (n + 1));
             }
         } catch (Exception e) {
             return y;
