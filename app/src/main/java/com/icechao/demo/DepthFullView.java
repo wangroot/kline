@@ -27,6 +27,7 @@ import java.util.List;
  *************************************************************************/
 public class DepthFullView extends RelativeLayout {
 
+
     private DepthRecycleViewAdapter depthAdapter;
     private DrawDepthChart depthView;
 
