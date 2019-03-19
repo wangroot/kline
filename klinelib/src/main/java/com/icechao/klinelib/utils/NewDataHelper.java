@@ -1,10 +1,33 @@
 package com.icechao.klinelib.utils;
 
-import android.widget.TextView;
-
 import com.icechao.klinelib.entity.KLineEntity;
 
 import java.util.List;
+
+import static com.icechao.klinelib.base.BaseKLineChartView.GROUP_COUNT;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_BOLL_DN;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_BOLL_MB;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_BOLL_UP;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_CLOSE;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_HIGH;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_KDJ_D;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_KDJ_J;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_KDJ_K;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_LOW;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MACD;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MACD_DEA;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MACD_DIF;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MA_1;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MA_2;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_MA_3;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_OPEN;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_RSI;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_VOL;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_VOL_MA_1;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_VOL_MA_2;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_WR_1;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_WR_2;
+import static com.icechao.klinelib.base.BaseKLineChartView.INDEX_WR_3;
 
 /*************************************************************************
  * Description   :
@@ -19,42 +42,15 @@ import java.util.List;
 public class NewDataHelper {
 
 
-    public static final int INDEX_OPEN = 0;
-    public static final int INDEX_CLOSE = 1;
-    public static final int INDEX_HIGH = 2;
-    public static final int INDEX_LOW = 3;
-    public static final int INDEX_VOL = 4;
-    public static final int INDEX_MA_1 = 5;
-    public static final int INDEX_MA_2 = 6;
-    public static final int INDEX_MA_3 = 7;
-    public static final int INDEX_BOLL_UP = 8;
-    public static final int INDEX_BOLL_MB = 9;
-    public static final int INDEX_BOLL_DN = 10;
-    public static final int INDEX_KDJ_K = 11;
-    public static final int INDEX_KDJ_D = 12;
-    public static final int INDEX_KDJ_J = 13;
-    public static final int INDEX_WR_1 = 14;
-    public static final int INDEX_WR_2 = 15;
-    public static final int INDEX_WR_3 = 16;
-    public static final int INDEX_VOL_MA_1 = 17;
-    public static final int INDEX_VOL_MA_2 = 18;
-    public static final int INDEX_RSI = 19;
-    public static final int INDEX_MACD_DEA = 20;
-    public static final int INDEX_MACD_DIF = 21;
-    public static final int INDEX_MACD = 22;
-
-    public static final int GROUP_COUNT = 23;
-
-
     /**
      * 计算  重构:计算方法,过多循环~  把循环尽量放到一个循环种加快计算速度
      *
      * @param dataList
      */
     static float[] calculate(List<KLineEntity> dataList, float bollP, int bollN,
-                             float priceMaOne, float priceMaTwo, float priceMaThree,
+                             int priceMaOne, int priceMaTwo, int priceMaThree,
                              int s, int l, int m,
-                             float maOne, float maTwo, float maThree,
+                             int maOne, int maTwo, float maThree,
                              int kdjDay,
                              int wr1, int wr2, int wr3) {
         float maSum1 = 0;
@@ -80,7 +76,7 @@ public class NewDataHelper {
             int tmp = i * GROUP_COUNT;
 
             buffer[tmp + INDEX_OPEN] = point.open;
-            buffer[tmp + INDEX_CLOSE] = point.close;
+            buffer[tmp + INDEX_CLOSE] = closePrice;
             buffer[tmp + INDEX_HIGH] = point.high;
             buffer[tmp + INDEX_LOW] = point.low;
             buffer[tmp + INDEX_VOL] = point.volume;
@@ -94,7 +90,7 @@ public class NewDataHelper {
             if (i == priceMaOne - 1) {
                 tempMa = maSum1 / priceMaOne;
             } else if (i >= priceMaOne) {
-                maSum1 -= dataList.get((int) (i - priceMaOne)).getClosePrice();
+                maSum1 -= buffer[(i - priceMaOne) * GROUP_COUNT + INDEX_CLOSE];
                 tempMa = maSum1 / priceMaOne;
             } else {
                 tempMa = Float.MIN_VALUE;
@@ -104,7 +100,7 @@ public class NewDataHelper {
             if (i == priceMaTwo - 1) {
                 tempMa = maSum2 / priceMaTwo;
             } else if (i >= priceMaTwo) {
-                maSum2 -= dataList.get((int) (i - priceMaTwo)).getClosePrice();
+                maSum2 -= buffer[(i - priceMaTwo) * GROUP_COUNT + INDEX_CLOSE];
                 tempMa = maSum2 / priceMaTwo;
             } else {
                 tempMa = Float.MIN_VALUE;
@@ -114,7 +110,7 @@ public class NewDataHelper {
             if (i == priceMaThree - 1) {
                 tempMa = maSum3 / priceMaThree;
             } else if (i >= priceMaThree) {
-                maSum3 -= dataList.get((int) (i - priceMaThree)).getClosePrice();
+                maSum3 -= buffer[(i - priceMaThree) * GROUP_COUNT + INDEX_CLOSE];
                 tempMa = maSum3 / priceMaThree;
             } else {
                 tempMa = Float.MIN_VALUE;
@@ -144,7 +140,7 @@ public class NewDataHelper {
 
                     if (i >= m + l - 2) {
                         boolean isFirst = i == m + l - 2;
-                        float dea = calculateDEA(dataList, l, m, i, preDea, isFirst);
+                        float dea = calculateDEA(buffer, dataList, l, m, i, preDea, isFirst);
                         preDea = dea;
                         buffer[tmp + INDEX_MACD_DEA] = (dea);
                     } else {
@@ -152,7 +148,7 @@ public class NewDataHelper {
                     }
 
                     if (i >= m + l - 2) {
-                        buffer[tmp + INDEX_MACD] = point.getDif() - point.getDea();
+                        buffer[tmp + INDEX_MACD] = buffer[tmp + INDEX_MACD_DIF] - buffer[tmp + INDEX_MACD_DEA];
                     } else {
                         buffer[tmp + INDEX_MACD] = Float.MIN_VALUE;
                     }
@@ -177,13 +173,13 @@ public class NewDataHelper {
             }
 
             //vol ma计算
-            volumeMaOne += point.getVolume();
-            volumeMaTwo += point.getVolume();
+            volumeMaOne += buffer[tmp + INDEX_VOL];
+            volumeMaTwo += buffer[tmp + INDEX_VOL];
             float ma;
             if (i == maOne - 1) {
                 ma = (volumeMaOne / maOne);
             } else if (i > maOne - 1) {
-                volumeMaOne -= dataList.get((int) (i - maOne)).getVolume();
+                volumeMaOne -= buffer[(i - maOne) * GROUP_COUNT + INDEX_VOL];
                 ma = volumeMaOne / maOne;
             } else {
                 ma = Float.MIN_VALUE;
@@ -193,7 +189,7 @@ public class NewDataHelper {
             if (i == maTwo - 1) {
                 ma = (volumeMaTwo / maTwo);
             } else if (i > maTwo - 1) {
-                volumeMaTwo -= dataList.get((int) (i - maTwo)).getVolume();
+                volumeMaTwo -= buffer[(i - maTwo) * GROUP_COUNT + INDEX_VOL];
                 ma = volumeMaTwo / maTwo;
             } else {
                 ma = Float.MIN_VALUE;
@@ -212,8 +208,8 @@ public class NewDataHelper {
                 float maxRsi = Float.MIN_VALUE;
                 float minRsi = Float.MAX_VALUE;
                 for (int index = startIndex; index <= i; index++) {
-                    maxRsi = Math.max(maxRsi, dataList.get(index).getHighPrice());
-                    minRsi = Math.min(minRsi, dataList.get(index).getLowPrice());
+                    maxRsi = Math.max(maxRsi, buffer[index * GROUP_COUNT + INDEX_HIGH]);
+                    minRsi = Math.min(minRsi, buffer[index * GROUP_COUNT + INDEX_LOW]);
                 }
                 float rsv;
                 try {
@@ -221,10 +217,9 @@ public class NewDataHelper {
                 } catch (Exception e) {
                     rsv = 0f;
                 }
-                KLineEntity kLineEntity = dataList.get(i - 1);
-                float k1 = kLineEntity.getK();
+                float k1 = buffer[tmp + INDEX_KDJ_K - GROUP_COUNT];
                 k = 2f / 3f * (k1 == Float.MIN_VALUE ? 50 : k1) + 1f / 3f * rsv;
-                float d1 = kLineEntity.getD();
+                float d1 = buffer[tmp + INDEX_KDJ_D - GROUP_COUNT];
                 d = 2f / 3f * (d1 == Float.MIN_VALUE ? 50 : d1) + 1f / 3f * k;
                 buffer[tmp + INDEX_KDJ_K] = k;
                 buffer[tmp + INDEX_KDJ_D] = d;
@@ -253,7 +248,7 @@ public class NewDataHelper {
      *
      * @param dataList
      */
-    public static void calculate(List<KLineEntity> dataList) {
+    public static float[] calculate(List<KLineEntity> dataList) {
         float[] calculate = calculate(dataList, 2, 20,
                 5, 10, 30,
                 12, 26, 9,
@@ -261,6 +256,7 @@ public class NewDataHelper {
                 14,
                 14, 0, 0);
         calculateRSI(dataList, 14, calculate);
+        return calculate;
     }
 
 
@@ -293,6 +289,7 @@ public class NewDataHelper {
     /**
      * 计算DEA
      *
+     * @param buffer
      * @param list    列表
      * @param l       L26
      * @param m       M9
@@ -301,18 +298,18 @@ public class NewDataHelper {
      * @param isFirst 是否是第一个
      * @return dea
      */
-    private static float calculateDEA(List<KLineEntity> list, int l, int m, int index,
+    private static float calculateDEA(float[] buffer, List<KLineEntity> list, int l, int m, int index,
                                       float preDea,
                                       boolean isFirst) {
         float y = 0;
         try {
             if (isFirst) {
                 for (int i = l - 1; i <= m + l - 2; i++) {
-                    y += list.get(i).getDif();
+                    y += buffer[i * GROUP_COUNT + INDEX_MACD_DIF];
                 }
                 return y / m;
             } else {
-                return ((preDea * (m - 1) + list.get(index).getDif() * 2) / (m + 1));
+                return ((preDea * (m - 1) + buffer[index * GROUP_COUNT + INDEX_MACD_DIF] * 2) / (m + 1));
             }
         } catch (Exception e) {
             return y;

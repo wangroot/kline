@@ -29,6 +29,7 @@ import com.icechao.klinelib.utils.Constants;
  * @Email        : icechliu@gmail.com
  * @version      : V1
  *************************************************************************/
+@Deprecated
 public class BaseDepthView extends View implements View.OnTouchListener {
 
     private BaseDepthAdapter dataAdapter;

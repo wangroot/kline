@@ -1,6 +1,7 @@
 package com.icechao.klinelib.base;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Canvas;
@@ -12,6 +13,8 @@ import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.os.SystemClock;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -19,18 +22,15 @@ import android.view.ScaleGestureDetector;
 
 import com.icechao.klinelib.R;
 import com.icechao.klinelib.adapter.KLineChartAdapter;
-import com.icechao.klinelib.draw.MainDraw;
 import com.icechao.klinelib.draw.Status;
-import com.icechao.klinelib.draw.VolumeDraw;
 import com.icechao.klinelib.entity.ICandle;
-import com.icechao.klinelib.entity.IKLine;
 import com.icechao.klinelib.formatter.DateFormatter;
 import com.icechao.klinelib.formatter.TimeFormatter;
 import com.icechao.klinelib.formatter.ValueFormatter;
-import com.icechao.klinelib.utils.NumberUtil;
 import com.icechao.klinelib.utils.ViewUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -67,7 +67,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 当前子视图的索引
      */
-    private int childDrawPosition = -1;
+    private int childDrawPosition = 0;
 
     /**
      * 绘制K线时画板平移的距离
@@ -239,17 +239,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     private int priceLineBoxHeight = 40;
 
     /**
-     * 主视视图
-     */
-    private IChartDraw<ICandle> mainDraw;
-    /**
      * 交易量视图
      */
-    private IChartDraw volDraw;
-    /**
-     * 所有子视图
-     */
-    private IChartDraw<ICandle> childDraw;
 
     /**
      * 当前K线的最新价
@@ -259,12 +250,23 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * K线数据适配器
      */
-    private IAdapter<ICandle> dataAdapter;
+    private KLineChartAdapter dataAdapter;
 
     /**
      * 量视图是否显示为线
      */
     private boolean isLine;
+
+
+    private Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mRedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mGreenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint ma5Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint ma10Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint volLeftPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private float pillarWidth = 0;
+    private ValueFormatter volValueFormater = new ValueFormatter();
+    private float[] points;
 
 
     /**
@@ -323,7 +325,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                     }
                 }
             }
-
+            points = dataAdapter.getPoints();
             notifyChanged();
         }
 
@@ -351,7 +353,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     private void excuteAnimChange(ICandle item, float closePrice, float vol) {
         generaterAnimator(lastVol, vol, animation -> lastVol = (Float) animation.getAnimatedValue());
-
         generaterAnimator(lastPrice, closePrice, animation -> {
             lastPrice = (Float) animation.getAnimatedValue();
             if (isLine) {
@@ -359,10 +360,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             }
             animValidate();
         });
-        if (isAnimationLast) {
-            mainDraw.startAnim(item, BaseKLineChartView.this);
-            volDraw.startAnim(item, BaseKLineChartView.this);
-        }
     }
 
     /**
@@ -472,12 +469,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
         mAnimator = ValueAnimator.ofFloat(0f, 1f);
         mAnimator.setDuration(duration);
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                invalidate();
-            }
-        });
+        mAnimator.addUpdateListener(animation -> animValidate());
         selectorFramePaint.setStrokeWidth(ViewUtil.Dp2Px(getContext(), 0.6f));
         selectorFramePaint.setStyle(Paint.Style.STROKE);
         selectorFramePaint.setColor(Color.WHITE);
@@ -490,7 +482,62 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         priceLineBoxPaint.setStyle(Paint.Style.STROKE);
         priceLineBoxPaint.setStrokeWidth(1);
 
+        int upColor = ContextCompat.getColor(getContext(), R.color.chart_up);
+        mRedPaint.setColor(upColor);
+        int downColor = ContextCompat.getColor(getContext(), R.color.chart_down);
+        mGreenPaint.setColor(downColor);
+        pillarWidth = ViewUtil.Dp2Px(getContext(), 4);
+
+
+        //
+        selectorBorderPaint.setStyle(Paint.Style.STROKE);
+        upPaint.setStyle(Paint.Style.FILL);
+        upLinePaint.setStyle(Paint.Style.STROKE);
+        upLinePaint.setAntiAlias(true);
+        downPaint.setStyle(Paint.Style.FILL);
+        downLinePaint.setStyle(Paint.Style.STROKE);
+        downLinePaint.setAntiAlias(true);
+        padding = ViewUtil.Dp2Px(getContext(), 5);
+        margin = ViewUtil.Dp2Px(getContext(), 5);
+        marketInfoText[0] = ("时间   ");
+        marketInfoText[1] = ("开     ");
+        marketInfoText[2] = ("高     ");
+        marketInfoText[3] = ("低     ");
+        marketInfoText[4] = ("收     ");
+        marketInfoText[5] = ("涨跌额  ");
+        marketInfoText[6] = ("涨跌幅  ");
+        marketInfoText[7] = ("成交量  ");
+
+
+        mRedPaint.setColor(upColor);
+        mGreenPaint.setColor(downColor);
+
+        mRedPaint.setColor(upColor);
+        mGreenPaint.setColor(downColor);
     }
+
+    private float padding;
+    private float margin;
+    private String[] strings = new String[8];
+
+
+    private float candleWidth = 0;
+    private Paint lineAreaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint upPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint upLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint downPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint downLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+
+    private Paint indexPaintOne = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint indexPaintTwo = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint indexPaintThree = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private Paint selectorTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint selectorBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint selectorBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private String[] marketInfoText = new String[8];
 
 
     @Override
@@ -510,7 +557,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      * 子视图
      */
     private void initRect() {
-        if (null != childDraw) {
+        if (childDrawPosition > 0) {
             int mMainHeight = (int) (displayHeight * 0.6f);
             int mVolHeight = (int) (displayHeight * 0.2f);
             int mChildHeight = (int) (displayHeight * 0.2f);
@@ -526,49 +573,27 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
 
-    private long time;
-
-    /**
-     * 刷新界面
-     */
-    public void animValidate() {
-        if (System.currentTimeMillis() - time > 16) {
-            invalidate();
-            time = System.currentTimeMillis();
-        }
-
-    }
-
     @Override
     public void onDraw(Canvas canvas) {
-
+        long l = SystemClock.currentThreadTimeMillis();
         //当正在显示loading时,没有初始化好,数据为空时不绘制
         if (isShowLoading || width == 0 || mainRect.height() == 0 || itemsCount == 0) {
             return;
         }
-        try {
-            calculateValue();
+        calculateValue();
+        drawBackground(canvas);
+        drawGird(canvas);
 
-            drawBackground(canvas);
-
-            drawGird(canvas);
-
-            if (isLine) {
-                drawK(canvas);
-                drawText(canvas);
-                drawPriceLine(canvas);
-            } else {
-                drawPriceLine(canvas);
-                drawK(canvas);
-                drawText(canvas);
-            }
-            drawValue(canvas, isLongPress ? selectedIndex : screenRightIndex);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (isLine) {
+            drawK(canvas);
+            drawText(canvas);
+            drawPriceLine(canvas);
+        } else {
+            drawPriceLine(canvas);
+            drawK(canvas);
+            drawText(canvas);
         }
-
-
+        drawValue(canvas, isLongPress ? selectedIndex : screenRightIndex);
     }
 
     /**
@@ -584,7 +609,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         canvas.drawRect(0, 0, width, mainRect.bottom, backgroundPaint);
         backgroundPaint.setShader(new LinearGradient(mid, volRect.top - topPadding, mid, volRect.bottom, backGroundTopColor, backGroundBottomColor, Shader.TileMode.CLAMP));
         canvas.drawRect(0, mainRect.bottom, width, volRect.bottom, backgroundPaint);
-        if (null != childDraw) {
+        if (0 != childDrawPosition) {
             backgroundPaint.setShader(new LinearGradient(mid, childRect.top - topPadding, mid, childRect.bottom, backGroundTopColor, backGroundBottomColor, Shader.TileMode.CLAMP));
             canvas.drawRect(0, childRect.top, width, childRect.bottom, backgroundPaint);
         }
@@ -603,28 +628,24 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 设置当前K线总数据个数
      *
-     * @param itemCount
+     * @param itemsCount
      */
-    public void setItemCount(int itemCount) {
+    public void setItemCount(int itemsCount) {
         //数据个数为0时重置本地保存数据,重置平移
-        if (itemCount == 0) {
-            this.itemsCount = itemCount;
+        if (itemsCount == 0) {
+            this.itemsCount = itemsCount;
             resetValues();
             canvasTranslateX = 1f;
         } else {
-            this.itemsCount = itemCount;
+            this.itemsCount = itemsCount;
         }
-        mainDraw.setItemCount(itemsCount);
-        mainDraw.resetValues();
-        volDraw.setItemCount(itemsCount);
-        volDraw.resetValues();
         int size = mChildDraws.size();
         for (int i = 0; i < size; i++) {
             IChartDraw iChartDraw = mChildDraws.get(i);
             iChartDraw.setItemCount(0);
             iChartDraw.resetValues();
         }
-        invalidate();
+        animValidate();
     }
 
     /**
@@ -673,12 +694,23 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             float stopX = columnSpace * i;
             canvas.drawLine(stopX, 0, stopX, mainRect.bottom, gridPaint);
             canvas.drawLine(stopX, mainRect.bottom, stopX, volRect.bottom, gridPaint);
-            if (null != childDraw) {
+            if (0 != childDrawPosition) {
                 canvas.drawLine(stopX, volRect.bottom, stopX, childRect.bottom, gridPaint);
             }
         }
     }
 
+
+    private float maOne;
+    private float maTwo;
+    private float maThree;
+
+    private float bollUp;
+    private float bollMb;
+    private float bollDn;
+
+
+    private float lineVolWidth = 4;
 
     /**
      * 绘制k线图
@@ -686,38 +718,254 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      * @param canvas canvas
      */
     private void drawK(Canvas canvas) {
+        if (null == points || points.length == 0) {
+            return;
+        }
         canvas.save();
         canvas.translate(canvasTranslateX, 0);
         for (int i = screenLeftIndex; i <= screenRightIndex; i++) {
-            ICandle lastPoint, currentPoint = getItem(i);
-            float lastX, currentPointX = getX(i);
-            if (0 < i) {
-                lastPoint = getItem(i - 1);
-                lastX = getX(i - 1);
+
+            int temp = GROUP_COUNT * i;
+
+            float curHigh = points[temp + INDEX_HIGH];
+            float curLow = points[temp + INDEX_LOW];
+            float curOpen = points[temp + INDEX_OPEN];
+            float curClose = points[temp + INDEX_CLOSE];
+            float curVol = points[temp + INDEX_VOL];
+
+            float lastX = getX(i - 1);
+            float curX = getX(i);
+
+            if (isLine()) {
+                if (i == 0) {
+                    continue;
+                }
+                float lastClosePrice = points[temp + INDEX_CLOSE - GROUP_COUNT];
+                if (i == itemsCount - 1) {
+                    drawEndMinutsLine(canvas, linePaint, lastX, lastClosePrice, curX);
+                    drawEndMinutsLineArea(canvas, lineAreaPaint, lastX, lastClosePrice, curX);
+
+                } else {
+                    drawLine(canvas, linePaint, lastX, lastClosePrice, curX, curClose);
+                    drawMinutsLineArea(canvas, lineAreaPaint, lastX, lastClosePrice, curX, curClose);
+                }
+
             } else {
-                lastPoint = currentPoint;
-                lastX = 0;
+                drawCandle(canvas, curX, curHigh, curLow, curOpen, curClose, i);
+                if (i == 0) {
+                    continue;
+                }
+                Status status = getStatus();
+                if (status == Status.MA) {
+                    //画第一根ma
+                    float lastMa = points[temp + INDEX_MA_1 - GROUP_COUNT];
+                    float curMa = points[temp + INDEX_MA_1];
+                    drawIndexLine(canvas, indexPaintOne, i, lastX, curX, lastMa, curMa, maOne);
+                    //画第二根ma
+                    lastMa = points[temp + INDEX_MA_2 - GROUP_COUNT];
+                    curMa = points[temp + INDEX_MA_2];
+                    drawIndexLine(canvas, indexPaintTwo, i, lastX, curX, lastMa, curMa, maTwo);
+                    //画第三根ma
+                    lastMa = points[temp + INDEX_MA_3 - GROUP_COUNT];
+                    curMa = points[temp + INDEX_MA_3];
+                    drawIndexLine(canvas, indexPaintThree, i, lastX, curX, lastMa, curMa, maThree);
+                } else if (status == Status.BOLL) {
+                    //画boll
+                    float laseIndex = points[temp + INDEX_BOLL_UP - GROUP_COUNT];
+                    float curIndex = points[temp + INDEX_BOLL_UP];
+                    drawIndexLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, bollUp);
+                    laseIndex = points[temp + INDEX_BOLL_MB - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_BOLL_MB];
+                    drawIndexLine(canvas, indexPaintTwo, i, lastX, curX, laseIndex, curIndex, bollMb);
+                    laseIndex = points[temp + INDEX_BOLL_DN - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_BOLL_DN];
+                    drawIndexLine(canvas, indexPaintThree, i, lastX, curX, laseIndex, curIndex, bollDn);
+                }
             }
-            if (null == lastPoint || null == currentPoint) {
-                break;
-            }
-            mainDraw.drawTranslated(lastPoint, currentPoint, lastX, currentPointX, canvas, this, i);
-            volDraw.drawTranslated(lastPoint, currentPoint, lastX, currentPointX, canvas, this, i);
-            if (null != childDraw) {
-                childDraw.drawTranslated(lastPoint, currentPoint, lastX, currentPointX, canvas, this, i);
+            drawVol(canvas, i, curX, curOpen, curClose, curVol);
+            float laseIndex = points[temp + INDEX_VOL_MA_1 - GROUP_COUNT];
+            float curIndex = points[temp + INDEX_VOL_MA_1];
+            drawVolLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, volMa1);
+            laseIndex = points[temp + INDEX_VOL_MA_2 - GROUP_COUNT];
+            curIndex = points[temp + INDEX_VOL_MA_2];
+            drawVolLine(canvas, indexPaintTwo, i, lastX, curX, laseIndex, curIndex, volMa2);
+
+
+            switch (childDrawPosition) {
+                case CHILD_POSITION_MACD:
+                    float r = MACDWidth / 2;
+                    float macd = points[temp + INDEX_MACD];
+                    if (macd > 0) {
+                        canvas.drawRect(curX - r, getChildY(macd), curX + r, getChildY(0), mRedPaint);
+                    } else {
+                        canvas.drawRect(curX - r, getChildY(0), curX + r, getChildY(macd), mGreenPaint);
+                    }
+
+                    laseIndex = points[temp + INDEX_MACD_DEA - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_MACD_DEA];
+                    drawChildLine(canvas, mDEAPaint, i, lastX, curX, laseIndex, curIndex, 0);
+                    laseIndex = points[temp + INDEX_MACD_DIF - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_MACD_DIF];
+                    drawChildLine(canvas, mDIFPaint, i, lastX, curX, laseIndex, curIndex, 0);
+
+
+                    break;
+                case CHILD_POSITION_KDJ:
+                    laseIndex = points[temp + INDEX_KDJ_K - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_KDJ_K];
+                    drawChildLine(canvas, mKPaint, i, lastX, curX, laseIndex, curIndex, 0);
+                    laseIndex = points[temp + INDEX_KDJ_D - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_KDJ_D];
+                    drawChildLine(canvas, mDPaint, i, lastX, curX, laseIndex, curIndex, 0);
+                    laseIndex = points[temp + INDEX_KDJ_J - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_KDJ_J];
+                    drawChildLine(canvas, mJPaint, i, lastX, curX, laseIndex, curIndex, 0);
+                    break;
+                case CHILD_POSITION_RSI:
+                    laseIndex = points[temp + INDEX_RSI - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_RSI];
+                    drawChildLine(canvas, mRSI1Paint, i, lastX, curX, laseIndex, curIndex, 0);
+
+                    break;
+                case CHILD_POSITION_WR:
+                    laseIndex = points[temp + INDEX_WR_1 - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_WR_1];
+                    drawChildLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, 0);
+                    break;
             }
         }
+
+
         drawSelectedCross(canvas);
+
         drawMaxAndMin(canvas);
         canvas.restore();
     }
 
+
+    private float volMa1;
+    private float volMa2;
+    private float MACDWidth;
+
+    /**
+     * 设置MACD的宽度
+     *
+     * @param MACDWidth
+     */
+    public void setMACDWidth(float MACDWidth) {
+        this.MACDWidth = MACDWidth;
+    }
+
+    public static final int CHILD_POSITION_MACD = 1;
+    public static final int CHILD_POSITION_KDJ = 2;
+    public static final int CHILD_POSITION_RSI = 3;
+    public static final int CHILD_POSITION_WR = 4;
+
+
+    private void drawIndexLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
+        if (Float.MIN_VALUE != lastMa) {
+            if (itemsCount - 1 == i && 0 != animMa) {
+                drawLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
+            } else {
+                drawLine(canvas, indexPaint, lastX, lastMa, curX, curMa);
+            }
+        }
+    }
+
+    private void drawVolLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
+        if (Float.MIN_VALUE != lastMa) {
+            if (itemsCount - 1 == i && 0 != animMa) {
+                drawVolLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
+            } else {
+                drawVolLine(canvas, indexPaint, lastX, lastMa, curX, curMa);
+            }
+        }
+    }
+
+    private void drawChildLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
+        if (Float.MIN_VALUE != lastMa) {
+            if (itemsCount - 1 == i && 0 != animMa) {
+                drawChildLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
+            } else {
+                drawChildLine(canvas, indexPaint, lastX, lastMa, curX, curMa);
+            }
+        }
+    }
+
+    private void drawVol(Canvas canvas, int i, float curX, float curOpen, float curClose, float curVol) {
+        float r = pillarWidth / 2 * scaleX;
+        float top;
+        if (i == itemsCount - 1) {
+            top = getVolY(lastVol);
+        } else {
+            top = getVolY(curVol);
+        }
+        //添加成交量柱状图高度限制
+        int bottom = getVolRect().bottom;
+        if (top > bottom) {
+            top = bottom;
+        }
+        if (0 != lastVol && top > bottom - 1) {
+            top = bottom - 1;
+        }
+        if (isLine()) {
+            canvas.drawRect(curX - lineVolWidth, top, curX + lineVolWidth, bottom, linePaint);
+        } else if (curClose > curOpen) {//涨
+            canvas.drawRect(curX - r, top, curX + r, bottom, mRedPaint);
+        } else {
+            canvas.drawRect(curX - r, top, curX + r, bottom, mGreenPaint);
+        }
+    }
+
+
+    private void drawCandle(Canvas canvas, float x, float high, float low, float open, float close, int position) {
+        high = getMainY(high);
+        low = getMainY(low);
+        open = getMainY(open);
+        if (position == itemsCount - 1) {
+            close = getMainY(lastPrice);
+        } else {
+            close = getMainY(close);
+        }
+        float r = candleWidth / 2 * scaleX;
+        float cancleLeft = x - r;
+        float candleright = x + r;
+//        Path path = new Path();
+
+        if (open > close) {
+//            path.moveTo(x, high);
+//            path.lineTo(x, open);
+//            path.moveTo(x, close);
+//            path.lineTo(x, low);
+            canvas.drawRect(cancleLeft, close, candleright, open, upPaint);
+//            canvas.drawPath(path, upLinePaint);
+            canvas.drawLine(x, high, x, open, upPaint);
+            canvas.drawLine(x, close, x, low, upPaint);
+        } else if (open < close) {
+//            path.moveTo(x, high);
+//            path.lineTo(x, close);
+//            path.moveTo(x, open);
+//            path.lineTo(x, low);
+            canvas.drawRect(cancleLeft, open, candleright, close, downPaint);
+//            canvas.drawPath(path, downLinePaint);
+            canvas.drawLine(x, high, x, close, upPaint);
+            canvas.drawLine(x, close, x, low, upPaint);
+        } else {
+
+//            path.moveTo(x, high);
+//            path.lineTo(x, low);
+            canvas.drawRect(cancleLeft, open, candleright, close + 1, upPaint);
+            canvas.drawLine(x, high, x, low, upLinePaint);
+        }
+    }
+
+
     private void drawSelectedCross(Canvas canvas) {
         //画选择线
         if (isLongPress) {
-            IKLine point = (IKLine) getItem(selectedIndex);
+//            IKLine point = (IKLine) getItem(selectedIndex);
             float x = getX(selectedIndex);
-            float y = getMainY(point.getClosePrice());
+            float y = getMainY(points[selectedIndex * GROUP_COUNT + INDEX_CLOSE]);
             // k线图竖线
             float halfWidth = selectedWidth / 2 * scaleX;
             float left = x - halfWidth;
@@ -753,7 +1001,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         int gridRowCount;
         float rowSpace = displayHeight / gridRows;
         //当显示子视图时,y轴label减少显示一个
-        if (null != childDraw) {
+        if (0 != childDrawPosition) {
             gridRowCount = gridRows - 2;
             rowValue = (mainMaxValue - mainMinValue) / gridRowCount;
         } else {
@@ -768,18 +1016,19 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
 
         //交易量图的Y轴label
-        String maxVol =volDraw.getValueFormatter().format(volMaxValue);
+        // TODO: 2019/3/19
+        String maxVol = getValueFormatter().format(volMaxValue);
         canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
 
         //子图Y轴label
-        if (null != childDraw) {
-            String childLable = childDraw.getValueFormatter().format(childMaxValue);
+        if (0 != childDrawPosition) {
+            String childLable = getValueFormatter().format(childMaxValue);
             canvas.drawText(childLable, width - textPaint.measureText(childLable), volRect.bottom + baseLine, textPaint);
         }
         //画时间
         float columnSpace = width / gridColumns;
         float y;
-        if (null != childDraw) {
+        if (0 != childDrawPosition) {
             y = childRect.bottom + baseLine + 5;
         } else {
             y = volRect.bottom + baseLine + 5;
@@ -794,30 +1043,31 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             float translateX = xToTranslateX(tempX);
             if (translateX >= startX && translateX <= stopX) {
                 int index = indexOfTranslateX(translateX);
-                String text = formatDateTime(dataAdapter.getDate(index));
+                String text = dataAdapter.getDate(index);
                 canvas.drawText(text, tempX - textPaint.measureText(text) / 2, y, textPaint);
             }
         }
         //X轴最左侧的值
         float translateX = xToTranslateX(0);
         if (translateX >= startX && translateX <= stopX) {
-            canvas.drawText(formatDateTime(getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
+            canvas.drawText((getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
         }
         //X轴最右侧的值
         translateX = xToTranslateX(width);
         if (translateX >= startX && translateX <= stopX) {
-            String text = formatDateTime(getAdapter().getDate(screenRightIndex));
+            String text = (getAdapter().getDate(screenRightIndex));
             canvas.drawText(text, width - textPaint.measureText(text), y, textPaint);
         }
         if (isLongPress) {
             // 选中状态下的Y值
-            IKLine point = (IKLine) getItem(selectedIndex);
+//            IKLine point = (IKLine) getItem(selectedIndex);
             float textHorizentalPadding = ViewUtil.Dp2Px(getContext(), 5);
             float textVerticalPadding = ViewUtil.Dp2Px(getContext(), 3);
             float r = textHeight / 2 + textVerticalPadding;
-            y = getMainY(point.getClosePrice());
+            float closePrice = points[selectedIndex * GROUP_COUNT + INDEX_CLOSE];
+            y = getMainY(closePrice);
             float x;
-            String text = formatValue(point.getClosePrice());
+            String text = formatValue(closePrice);
             float textWidth = textPaint.measureText(text);
             float tempX = textWidth + 2 * textHorizentalPadding;
             //左侧框
@@ -850,11 +1100,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             }
 
             // 画X值
-            String date = formatDateTime(dataAdapter.getDate(selectedIndex));
+            String date = (dataAdapter.getDate(selectedIndex));
             textWidth = textPaint.measureText(date);
             r = textHeight / 2;
             x = translateXtoX(getX(selectedIndex));
-            if (null != childDraw) {
+            if (0 != childDrawPosition) {
                 y = childRect.bottom;
             } else {
                 y = volRect.bottom;
@@ -974,12 +1224,9 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         valueAnimator.setRepeatMode(ValueAnimator.REVERSE);
         valueAnimator.setDuration(duration);
         valueAnimator.setRepeatCount(10000);
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                endShadowLayerWidth = (Float) animation.getAnimatedValue();
-                animValidate();
-            }
+        valueAnimator.addUpdateListener(animation -> {
+            endShadowLayerWidth = (Float) animation.getAnimatedValue();
+            animValidate();
         });
         valueAnimator.start();
     }
@@ -1035,17 +1282,162 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 画值
      *
-     * @param canvas   canvas
-     * @param position 显示某个点的值
+     * @param canvas canvas
+     * @param i      显示某个点的值
      */
-    private void drawValue(Canvas canvas, int position) {
+    private void drawValue(Canvas canvas, int i) {
         float x = 10;
-        mainDraw.drawText(canvas, this, position, x, mainRect.top + baseLine - textHeight / 2);
-        volDraw.drawText(canvas, this, position, x, mainRect.bottom + baseLine);
-        if (null != childDraw) {
-            childDraw.drawText(canvas, this, position, x, volRect.bottom + baseLine);
+        float y;
+//        mainDraw.drawText(canvas, this, i, x, y);
+        y = textHeight;
+        int temp = i * GROUP_COUNT;
+        if (!isLine()) {
+            y += 10;
+            Status status = getStatus();
+            if (status == Status.MA) {
+                String text;
+                float point = points[temp + INDEX_MA_1];
+                if (Float.MIN_VALUE != point) {
+                    text = "MA5:" + formatValue(point) + "  ";
+                    canvas.drawText(text, x, y, indexPaintOne);
+                    x += indexPaintOne.measureText(text);
+                }
+                point = points[temp + INDEX_MA_2];
+                if (Float.MIN_VALUE != point) {
+                    text = "MA10:" + formatValue(point) + "  ";
+                    canvas.drawText(text, x, y, indexPaintTwo);
+                    x += indexPaintTwo.measureText(text);
+                }
+                point = points[temp + INDEX_MA_3];
+                if (Float.MIN_VALUE != point) {
+                    text = "MA30:" + formatValue(point);
+                    canvas.drawText(text, x, y, indexPaintThree);
+                }
+            } else if (status == Status.BOLL) {
+                float point = points[temp + INDEX_BOLL_MB];
+                if (Float.MIN_VALUE != point) {
+                    String text = "BOLL:" + formatValue(point) + "  ";
+                    canvas.drawText(text, x, y, indexPaintTwo);
+                    x += indexPaintOne.measureText(text);
+                    point = points[temp + INDEX_BOLL_UP];
+                    text = "UB:" + formatValue(point) + "  ";
+                    canvas.drawText(text, x, y, indexPaintOne);
+                    x += indexPaintTwo.measureText(text);
+                    point = points[temp + INDEX_BOLL_DN];
+                    text = "LB:" + formatValue(point);
+                    canvas.drawText(text, x, y, indexPaintThree);
+                }
+            }
+        }
+        if (isLongPress()) {
+            drawSelector(this, canvas);
+        }
+
+
+//        volDraw.drawText(canvas, this, i, x, );
+
+        //当没被选中时使用动画效果
+        String text;
+        y = mainRect.bottom + baseLine;
+        x = 10;
+        if (i == itemsCount - 1) {
+            text = "VOL:" + volValueFormater.format(getLastVol()) + "  ";
+        } else {
+            text = "VOL:" + volValueFormater.format(points[temp + INDEX_VOL]) + "  ";
+        }
+        canvas.drawText(text, x, y, volLeftPaint);
+        x += getTextPaint().measureText(text);
+        text = "MA5:" + getValueFormatter().format(points[temp + INDEX_VOL_MA_1]) + "  ";
+        canvas.drawText(text, x, y, ma5Paint);
+        x += ma5Paint.measureText(text);
+        text = "MA10:" + getValueFormatter().format(points[temp + INDEX_VOL_MA_2]);
+        canvas.drawText(text, x, y, ma10Paint);
+
+//        if (null != childDraw) {
+//            childDraw.drawText(canvas, this, i, x, volRect.bottom + baseLine);
+//        }
+
+        x = 10;
+        y = volRect.bottom + baseLine;
+        switch (childDrawPosition) {
+            case CHILD_POSITION_MACD:
+                text = "MACD(12,26,9)  ";
+                canvas.drawText(text, x, y, getTextPaint());
+                x += mMACDPaint.measureText(text);
+                text = "MACD:" + formatValue(points[temp + INDEX_MACD]) + "  ";
+                canvas.drawText(text, x, y, mMACDPaint);
+                x += mMACDPaint.measureText(text);
+                text = "DIF:" + formatValue(points[temp + INDEX_MACD_DIF]) + "  ";
+                canvas.drawText(text, x, y, mDIFPaint);
+                x += mDIFPaint.measureText(text);
+                text = "DEA:" + formatValue(points[temp + INDEX_MACD_DEA]);
+                canvas.drawText(text, x, y, mDEAPaint);
+                break;
+            case CHILD_POSITION_KDJ:
+                float point = points[temp + INDEX_KDJ_K];
+                if (Float.MIN_VALUE != point) {
+                    text = "KDJ(14,1,3)  ";
+                    canvas.drawText(text, x, y, getTextPaint());
+                    x += getTextPaint().measureText(text);
+                    text = "K:" + formatValue(points[temp + INDEX_KDJ_K]) + " ";
+                    canvas.drawText(text, x, y, mKPaint);
+                    x += mKPaint.measureText(text);
+                    point = points[temp + INDEX_KDJ_D];
+                    if (Float.MIN_VALUE != point) {
+                        text = "D:" + formatValue(points[temp + INDEX_KDJ_D]) + " ";
+                        canvas.drawText(text, x, y, mDPaint);
+                        x += mDPaint.measureText(text);
+                        text = "J:" + formatValue(points[temp + INDEX_KDJ_J]) + " ";
+                        canvas.drawText(text, x, y, mJPaint);
+                    }
+                }
+                break;
+            case CHILD_POSITION_RSI:
+                point = points[temp + INDEX_RSI];
+
+                if (Float.MIN_VALUE != point) {
+                    text = "RSI(14)  ";
+                    Paint textPaint = getTextPaint();
+                    canvas.drawText(text, x, y, textPaint);
+                    x += textPaint.measureText(text);
+                    text = formatValue(point);
+                    canvas.drawText(text, x, y, mRSI1Paint);
+                }
+
+                break;
+            case CHILD_POSITION_WR:
+
+                point = points[temp + INDEX_WR_1];
+                if (Float.MIN_VALUE != point) {
+                    text = "WR(14):";
+                    canvas.drawText(text, x, y, getTextPaint());
+                    x += getTextPaint().measureText(text);
+                    text = formatValue(point) + " ";
+                    canvas.drawText(text, x, y, r1Paint);
+                }
+
+
+                break;
         }
     }
+
+
+    private Paint mDIFPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mDEAPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mMACDPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private Paint mKPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mDPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mJPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private Paint mRSI1Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mRSI2Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint mRSI3Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private Paint r1Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint r2Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint r3Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 
     /**
      * 格式化值
@@ -1065,7 +1457,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         if (1f == canvasTranslateX && width != 0) {
             setTranslatedX(-(getDataLength() - width));
         }
-        invalidate();
+        animValidate();
     }
 
     /**
@@ -1076,7 +1468,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     public void changeMainDrawType(Status status) {
         if (this.status != status) {
             this.status = status;
-            invalidate();
+            animValidate();
         }
     }
 
@@ -1140,7 +1532,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     @Override
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-        super.onScrollChanged(l, t, oldl, oldt);
+//        super.onScrollChanged(l, t, oldl, oldt);
         setTranslatedX(canvasTranslateX + (l - oldl));
         if (isLine && getX(screenRightIndex) + canvasTranslateX <= width) {
             startFreshPage();
@@ -1156,7 +1548,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             return;
         }
         float tempWidth = chartItemWidth * scale;
-        float newCount = (width / tempWidth) ;
+        float newCount = (width / tempWidth);
         float oldCount = (width / chartItemWidth / oldScale);
         float difCount = (newCount - oldCount) / 2;
         setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
@@ -1214,37 +1606,52 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         //为保证页面效果正常,右侧取值时取值时多取一个,在计算最大值时需要抛出
 
         int tempLeft = screenLeftIndex > 0 ? screenLeftIndex + 1 : 0;
-//        int tempRight = screenRightIndex == (itemsCount - 1) ? itemsCount - 1 : screenRightIndex - 1;
-        for (int i = tempLeft; i <= screenRightIndex; i++) {
-            IKLine point = (IKLine) getItem(i);
-            if (null == point) {
+        for (int i = tempLeft; i <= screenRightIndex - 1; i++) {
+
+            if (i < 0) {
                 continue;
             }
+            int temp = i * GROUP_COUNT;
 
-            mainMaxValue = Math.max(mainMaxValue, mainDraw.getMaxValue(point, status));
-            mainMinValue = Math.min(mainMinValue, mainDraw.getMinValue(point, status));
-            if (mainHighMaxValue != Math.max(mainHighMaxValue, point.getHighPrice())) {
-                mainHighMaxValue = point.getHighPrice();
+            mainMaxValue = Math.max(mainMaxValue, getMaxValue(points[temp + INDEX_HIGH],
+                    points[temp + INDEX_BOLL_UP], points[temp + INDEX_MA_1],
+                    points[temp + INDEX_MA_2], points[temp + INDEX_MA_3],
+                    status));
+            mainMinValue = Math.min(mainMinValue, getMinValue(points[temp + INDEX_LOW],
+                    points[temp + INDEX_BOLL_DN], points[temp + INDEX_MA_1],
+                    points[temp + INDEX_MA_2], points[temp + INDEX_MA_3],
+                    status));
+            if (mainHighMaxValue != Math.max(mainHighMaxValue, points[temp + INDEX_HIGH])) {
+                mainHighMaxValue = points[temp + INDEX_HIGH];
                 mainMaxIndex = i;
             }
-            if (mainLowMinValue != Math.min(mainLowMinValue, point.getLowPrice())) {
-                mainLowMinValue = point.getLowPrice();
+            if (mainLowMinValue != Math.min(mainLowMinValue, points[temp + INDEX_LOW])) {
+                mainLowMinValue = points[temp + INDEX_LOW];
                 mainMinIndex = i;
             }
 
-            float volume = point.getVolume();
+            float volume = points[temp + INDEX_VOL];
             volMaxValue = Math.max(volume, volMaxValue);
             //最后一个量不计入最小值,防止量图跳
             if (volume < mVolMinValue) {
                 mVolMinValue = volume;
             }
-            //平均值不可能大于最大值,不需要算入ma
-//            volMaxValue = Math.max(volMaxValue, volDraw.getMaxValue(point, status));
-//            mVolMinValue = Math.min(mVolMinValue, volDraw.getMinValue(point, status));
-
-            if (null != childDraw) {
-                childMaxValue = Math.max(childMaxValue, childDraw.getMaxValue(point, status));
-                mChildMinValue = Math.min(mChildMinValue, childDraw.getMinValue(point, status));
+            switch (childDrawPosition) {
+                case CHILD_POSITION_MACD:
+                    childMaxValue = Math.max(childMaxValue, Math.max(points[temp + INDEX_MACD], Math.max(points[temp + INDEX_MACD_DEA], points[temp + INDEX_MACD_DIF])));
+                    mChildMinValue = Math.min(mChildMinValue, Math.min(points[temp + INDEX_MACD], Math.min(points[temp + INDEX_MACD_DEA], points[temp + INDEX_MACD_DIF])));
+                    break;
+                case CHILD_POSITION_KDJ:
+                    childMaxValue = Math.max(childMaxValue, Math.max(points[temp + INDEX_KDJ_K], Math.max(points[temp + INDEX_KDJ_D], points[temp + INDEX_KDJ_J])));
+                    mChildMinValue = Math.min(mChildMinValue, Math.min(points[temp + INDEX_KDJ_K], Math.min(points[temp + INDEX_KDJ_D], points[temp + INDEX_KDJ_J])));
+                    break;
+                case CHILD_POSITION_RSI:
+                    childMaxValue = Math.max(childMaxValue, points[temp + INDEX_RSI]);
+                    mChildMinValue = Math.min(mChildMinValue, points[temp + INDEX_RSI]);
+                case CHILD_POSITION_WR:
+                    childMaxValue = Math.max(childMaxValue, points[temp + INDEX_WR_1]);
+                    mChildMinValue = Math.min(mChildMinValue, points[temp + INDEX_WR_1]);
+                    break;
             }
         }
         if (mainMaxValue != mainMinValue) {
@@ -1264,9 +1671,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             volMaxValue = 15.00f;
         }
 
-//        if (Math.abs(childMaxValue) < 0.01 && Math.abs(mChildMinValue) < 0.01) {
-//            childMaxValue = 1f;
-//        } else
         if (childMaxValue.equals(mChildMinValue)) {
             //当最大值和最小值都相等的时候 分别增大最大值和 减小最小值
             childMaxValue += Math.abs(childMaxValue * 0.05f);
@@ -1294,6 +1698,34 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     public int indexOfTranslateX(float translateX) {
         return (int) (translateX / chartItemWidth / getScaleX());
+    }
+
+
+    public float getMaxValue(float high, float up, float maOne, float maTwo, float maThree, Status status) {
+        float[] temp;
+        if (status == Status.BOLL) {
+            return Math.min(up, high);
+        } else {
+            temp = new float[]{maOne, maTwo, maThree, high};
+        }
+        Arrays.sort(temp);
+        return temp[temp.length - 1];
+    }
+
+    public float getMinValue(float low, float dn, float maOne, float maTwo, float maThree, Status status) {
+        float[] temp;
+        if (status == Status.BOLL) {
+            return Math.min(dn, low);
+        } else {
+            temp = new float[]{maOne, maTwo, maThree, low};
+        }
+        Arrays.sort(temp);
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i] != Float.MIN_VALUE) {
+                return temp[i];
+            }
+        }
+        return 0;
     }
 
 
@@ -1400,12 +1832,12 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 根据索引获取实体
      *
-     * @param position 索引值
+     * @param i 索引值
      * @return 实体
      */
-    public ICandle getItem(int position) {
+    public ICandle getItem(int i) {
         if (null != dataAdapter) {
-            return dataAdapter.getItem(position);
+            return dataAdapter.getItem(i);
         } else {
             return null;
         }
@@ -1414,11 +1846,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 画板上的坐标点
      *
-     * @param position 索引值
+     * @param i 索引值
      * @return x坐标
      */
-    public float getX(int position) {
-        return position * chartItemWidth * scaleX;
+    public float getX(int i) {
+        return i * chartItemWidth * scaleX;
     }
 
     /**
@@ -1433,15 +1865,14 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     /**
      * 设置当前子图
      *
-     * @param position position
+     * @param i i
      */
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
-    public void setChildDraw(int position) {
-        if (childDrawPosition != position) {
-            childDrawPosition = position;
-            childDraw = mChildDraws.get(position);
+    public void setChildDraw(int i) {
+        if (childDrawPosition != i) {
+            childDrawPosition = i;
             initRect();
-            invalidate();
+            animValidate();
         }
     }
 
@@ -1450,18 +1881,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     public void hideChildDraw() {
         childDrawPosition = -1;
-        childDraw = null;
         initRect();
-        invalidate();
-    }
-
-    /**
-     * 给子区域添加画图方法
-     *
-     * @param childDraw IChartDraw
-     */
-    public void addChildDraw(IChartDraw childDraw) {
-        mChildDraws.add(childDraw);
+        animValidate();
     }
 
     /**
@@ -1480,7 +1901,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     public void setValueFormatter(IValueFormatter valueFormatter) {
         this.mValueFormatter = valueFormatter;
-        mainDraw.setValueFormatter(valueFormatter);
+//        mainDraw.setValueFormatter(valueFormatter);
         for (int i = 0; i < mChildDraws.size(); i++) {
             mChildDraws.get(i).setValueFormatter(valueFormatter);
         }
@@ -1515,35 +1936,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             setDateTimeFormatter(new TimeFormatter());
         }
         return getDateTimeFormatter().format(date);
-    }
-
-    /**
-     * 获取主区域的 IChartDraw
-     *
-     * @return IChartDraw
-     */
-    @SuppressWarnings("unused")
-    public IChartDraw<ICandle> getMainDraw() {
-        return mainDraw;
-    }
-
-    /**
-     * 设置主区域的 IChartDraw
-     *
-     * @param mainDraw IChartDraw
-     */
-    public void setMainDraw(IChartDraw<ICandle> mainDraw) {
-        this.mainDraw = mainDraw;
-    }
-
-    @SuppressWarnings("unused")
-    public IChartDraw<ICandle> getVolDraw() {
-        return volDraw;
-    }
-
-    @SuppressWarnings(value = {"unchecked", "rawtypes"})
-    public void setVolDraw(IChartDraw mVolDraw) {
-        this.volDraw = mVolDraw;
     }
 
 
@@ -1698,7 +2090,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             overScrollRange = 0;
         }
         mOverScrollRange = overScrollRange;
-        setScrollX((int) -overScrollRange);
     }
 
 
@@ -1776,17 +2167,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     private float baseLine;
     private float textDecent;
 
-    /**
-     * 设置文字大小
-     */
-    public void setTextSize(float textSize) {
-        textPaint.setTextSize(textSize);
-        Paint.FontMetrics fm = textPaint.getFontMetrics();
-        textHeight = fm.descent - fm.ascent;
-        textDecent = fm.descent;
-        baseLine = (textHeight - fm.bottom - fm.top) / 2;
-        priceLineBoxRightPaint.setTextSize(textSize);
-    }
 
     public void setPriceLineColor(int color) {
         priceLinePaint.setColor(color);
@@ -1835,6 +2215,10 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         return lastVol;
     }
 
+    public void setVolValueFormatter(ValueFormatter valueFormatter) {
+        this.volValueFormater = valueFormatter;
+    }
+
     /**
      * 选中点变化时的监听
      */
@@ -1847,6 +2231,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
          * @param index 选中点的索引
          */
         void onSelectedChanged(BaseKLineChartView view, Object point, int index);
+
     }
 
     public void setPriceLineWidth(float lineWidth) {
@@ -1922,7 +2307,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
         this.isLine = isLine;
         setTranslatedX(getMinTranslate());
-        invalidate();
+        animValidate();
     }
 
     public boolean isLine() {
@@ -1956,7 +2341,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     @SuppressWarnings("unused")
     public void setMarketInfoText(String[] marketInfoText) {
-        ((MainDraw) mainDraw).setMarketInfoText(marketInfoText);
+//        ((MainDraw) mainDraw).setMarketInfoText(marketInfoText);
+        this.marketInfoText = marketInfoText;
     }
 
     /**
@@ -2032,17 +2418,18 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     public void setUpColor(int color) {
-        ((MainDraw) mainDraw).setUpColor(color);
+        upPaint.setColor(color);
+        upLinePaint.setColor(color);
 
     }
 
     public void setDownColor(int color) {
-        ((MainDraw) mainDraw).setDownColor(color);
+        downPaint.setColor(color);
+        downLinePaint.setColor(color);
     }
 
     public void setMinuteLineColor(int color) {
-        ((MainDraw) mainDraw).setMinuteLineColor(color);
-        ((VolumeDraw) volDraw).setMinuteColor(color);
+        linePaint.setColor(color);
     }
 
     public void setAreaTopColor(int color) {
@@ -2057,4 +2444,361 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     public boolean isAnimationLast() {
         return isAnimationLast;
     }
+
+
+    /**
+     * draw选择器
+     *
+     * @param view   view
+     * @param canvas canvas
+     */
+    @SuppressLint("DefaultLocale")
+    private void drawSelector(BaseKLineChartView view, Canvas canvas) {
+
+        int index = view.getSelectedIndex();
+
+        ICandle point = view.getItem(index);
+        strings[0] = String.valueOf(view.getAdapter().getDate(index));
+        strings[1] = (String.valueOf(point.getOpenPrice()));
+        strings[2] = (String.valueOf(point.getHighPrice()));
+        strings[3] = (String.valueOf(point.getLowPrice()));
+        strings[4] = (String.valueOf(point.getClosePrice()));
+        float tempDiffPrice = point.getClosePrice() - point.getOpenPrice();
+        strings[5] = (String.valueOf(tempDiffPrice));
+        strings[6] = (String.format("%.2f", (tempDiffPrice) * 100 / point.getOpenPrice()) + "%");
+        strings[7] = (String.valueOf(point.getVolume()));
+
+        float width = 0, left, top = margin + view.getTopPadding();
+        //上下多加两个padding值的间隙
+        int length = strings.length;
+        float height = padding * ((length - 1) + 4) + selectedTextHeight * length;
+        for (int i = 0; i < length; i++) {
+            String tempString = marketInfoText[i] + strings[i];
+            width = Math.max(width, selectorTextPaint.measureText(tempString));
+        }
+        width += padding * 2;
+
+        float x = view.translateXtoX(view.getX(index));
+        if (x > view.getChartWidth() / 2) {
+            left = margin;
+        } else {
+            left = view.getChartWidth() - width - margin;
+        }
+
+        float right = left + width;
+        RectF r = new RectF(left, top, right, top + height);
+        canvas.drawRoundRect(r, padding, padding, selectorBackgroundPaint);
+        canvas.drawRoundRect(r, padding, padding, selectorBorderPaint);
+        float y = top + padding * 2 + selectedTextBaseLine;
+        float tempX = right - padding;
+        for (int i = 0; i < length; i++) {
+            String s = strings[i];
+            canvas.drawText(marketInfoText[i], left + padding, y, selectorTextPaint);
+            if (i == 5 || i == 6) {
+                if (tempDiffPrice >= 0) {
+                    canvas.drawText(s, tempX - selectorTextPaint.measureText(s), y, upPaint);
+                } else {
+                    canvas.drawText(s, tempX - selectorTextPaint.measureText(s), y, downPaint);
+                }
+            } else {
+                canvas.drawText(s, tempX - selectorTextPaint.measureText(s), y, selectorTextPaint);
+            }
+            y += selectedTextHeight + padding;
+        }
+
+    }
+
+    private float selectedTextHeight;
+    private float selectedTextBaseLine;
+
+
+    /**
+     * 设置 vol图左上角文字 线的颜色
+     *
+     * @param color
+     */
+    public void setVolLeftColor(int color) {
+        this.volLeftPaint.setColor(color);
+    }
+
+
+    /**
+     * 设置ma1颜色
+     *
+     * @param color color
+     */
+    public void setMaOneColor(int color) {
+        this.indexPaintOne.setColor(color);
+        this.ma5Paint.setColor(color);
+    }
+
+    /**
+     * 设置ma2颜色
+     *
+     * @param color color
+     */
+    public void setMaTwoColor(int color) {
+        this.indexPaintTwo.setColor(color);
+        this.ma10Paint.setColor(color);
+    }
+
+    /**
+     * 设置ma3颜色
+     *
+     * @param color color
+     */
+    public void setMaThreeColor(int color) {
+        this.indexPaintThree.setColor(color);
+    }
+
+
+    /**
+     * 设置选择器文字大小
+     *
+     * @param textSize textsize
+     */
+    public void setSelectorTextSize(float textSize) {
+        selectorTextPaint.setTextSize(textSize);
+        downPaint.setTextSize(textSize);
+        upPaint.setTextSize(textSize);
+        Paint.FontMetrics metrics = selectorTextPaint.getFontMetrics();
+        selectedTextHeight = metrics.descent - metrics.ascent;
+        selectedTextBaseLine = (selectedTextHeight - metrics.bottom - metrics.top) / 2;
+    }
+
+    /**
+     * 设置选择器背景
+     *
+     * @param color color
+     */
+    public void setSelectorBackgroundColor(int color) {
+        selectorBackgroundPaint.setColor(color);
+    }
+
+    /**
+     * 设置蜡烛宽度
+     *
+     * @param candleWidth candle width
+     */
+    public void setCandleWidth(float candleWidth) {
+        this.candleWidth = candleWidth;
+    }
+
+    /**
+     * 设置蜡烛线宽度
+     *
+     * @param candleLineWidth lineWidth
+     */
+    public void setCandleLineWidth(float candleLineWidth) {
+        downLinePaint.setStrokeWidth(candleLineWidth);
+        upLinePaint.setStrokeWidth(candleLineWidth);
+    }
+
+
+    public void setBarWidth(float candleWidth) {
+        pillarWidth = candleWidth;
+    }
+
+
+    public void setStroke(boolean isStroke) {
+        if (isStroke) {
+            upPaint.setStyle(Paint.Style.STROKE);
+            downPaint.setStyle(Paint.Style.STROKE);
+        } else {
+            upPaint.setStyle(Paint.Style.FILL);
+            downPaint.setStyle(Paint.Style.FILL);
+        }
+    }
+
+
+    /**
+     * 设置文字大小
+     */
+    public void setTextSize(float textSize) {
+
+        textPaint.setTextSize(textSize);
+        Paint.FontMetrics fm = textPaint.getFontMetrics();
+        textHeight = fm.descent - fm.ascent;
+        textDecent = fm.descent;
+        baseLine = (textHeight - fm.bottom - fm.top) / 2;
+        priceLineBoxRightPaint.setTextSize(textSize);
+
+        indexPaintThree.setTextSize(textSize);
+        indexPaintTwo.setTextSize(textSize);
+        indexPaintOne.setTextSize(textSize);
+        Paint.FontMetrics metrics = indexPaintOne.getFontMetrics();
+        textHeight = metrics.descent - metrics.ascent;
+
+
+        this.ma5Paint.setTextSize(textSize);
+        this.ma10Paint.setTextSize(textSize);
+        this.volLeftPaint.setTextSize(textSize);
+
+        mDEAPaint.setTextSize(textSize);
+        mDIFPaint.setTextSize(textSize);
+        mMACDPaint.setTextSize(textSize);
+
+        mKPaint.setTextSize(textSize);
+        mDPaint.setTextSize(textSize);
+        mJPaint.setTextSize(textSize);
+
+
+        mRSI2Paint.setTextSize(textSize);
+        mRSI3Paint.setTextSize(textSize);
+        mRSI1Paint.setTextSize(textSize);
+
+        r1Paint.setTextSize(textSize);
+        r2Paint.setTextSize(textSize);
+        r3Paint.setTextSize(textSize);
+    }
+
+
+    /**
+     * 设置曲线宽度
+     */
+    public void setLineWidth(float width) {
+        indexPaintThree.setStrokeWidth(width);
+        indexPaintTwo.setStrokeWidth(width);
+        indexPaintOne.setStrokeWidth(width);
+        linePaint.setStrokeWidth(width);
+        selectorBorderPaint.setStrokeWidth(width);
+
+        mDEAPaint.setStrokeWidth(width);
+        mDIFPaint.setStrokeWidth(width);
+        mMACDPaint.setStrokeWidth(width);
+
+
+        mKPaint.setStrokeWidth(width);
+        mDPaint.setStrokeWidth(width);
+        mJPaint.setStrokeWidth(width);
+
+
+        this.linePaint.setStrokeWidth(width);
+        this.ma5Paint.setStrokeWidth(width);
+        this.ma10Paint.setStrokeWidth(width);
+        this.lineVolWidth = width / 2;
+
+        mRSI1Paint.setStrokeWidth(width);
+        mRSI2Paint.setStrokeWidth(width);
+        mRSI3Paint.setStrokeWidth(width);
+
+        r1Paint.setStrokeWidth(width);
+        r2Paint.setStrokeWidth(width);
+        r3Paint.setStrokeWidth(width);
+    }
+
+
+    /**
+     * 设置选择器文字颜色
+     *
+     * @param color color
+     */
+    public void setSelectorTextColor(int color) {
+        selectorTextPaint.setColor(color);
+        selectorBorderPaint.setColor(color);
+    }
+
+
+    /**
+     * 设置K颜色
+     */
+    public void setKColor(int color) {
+        mKPaint.setColor(color);
+    }
+
+    /**
+     * 设置D颜色
+     */
+    public void setDColor(int color) {
+        mDPaint.setColor(color);
+    }
+
+    /**
+     * 设置J颜色
+     */
+    public void setJColor(int color) {
+        mJPaint.setColor(color);
+    }
+
+    public void setRSI1Color(int color) {
+        mRSI1Paint.setColor(color);
+    }
+
+    public void setRSI2Color(int color) {
+        mRSI2Paint.setColor(color);
+    }
+
+    public void setRSI3Color(int color) {
+        mRSI3Paint.setColor(color);
+    }
+
+    /**
+     * 设置%R颜色
+     */
+    public void setR1Color(int color) {
+        r1Paint.setColor(color);
+    }
+
+    /**
+     * 设置%R颜色
+     */
+    public void setR2Color(int color) {
+        r2Paint.setColor(color);
+    }
+
+    /**
+     * 设置%R颜色
+     */
+    public void setR3Color(int color) {
+        r3Paint.setColor(color);
+    }
+
+
+    /**
+     * 设置DIF颜色
+     */
+    public void setDIFColor(int color) {
+        this.mDIFPaint.setColor(color);
+    }
+
+    /**
+     * 设置DEA颜色
+     */
+    public void setDEAColor(int color) {
+        this.mDEAPaint.setColor(color);
+    }
+
+    /**
+     * 设置MACD颜色
+     */
+    public void setMACDColor(int color) {
+        this.mMACDPaint.setColor(color);
+    }
+
+
+    public static final int INDEX_OPEN = 0;
+    public static final int INDEX_CLOSE = 1;
+    public static final int INDEX_HIGH = 2;
+    public static final int INDEX_LOW = 3;
+    public static final int INDEX_VOL = 4;
+    public static final int INDEX_MA_1 = 5;
+    public static final int INDEX_MA_2 = 6;
+    public static final int INDEX_MA_3 = 7;
+    public static final int INDEX_BOLL_UP = 8;
+    public static final int INDEX_BOLL_MB = 9;
+    public static final int INDEX_BOLL_DN = 10;
+    public static final int INDEX_KDJ_K = 11;
+    public static final int INDEX_KDJ_D = 12;
+    public static final int INDEX_KDJ_J = 13;
+    public static final int INDEX_WR_1 = 14;
+    public static final int INDEX_WR_2 = 15;
+    public static final int INDEX_WR_3 = 16;
+    public static final int INDEX_VOL_MA_1 = 17;
+    public static final int INDEX_VOL_MA_2 = 18;
+    public static final int INDEX_RSI = 19;
+    public static final int INDEX_MACD_DEA = 20;
+    public static final int INDEX_MACD_DIF = 21;
+    public static final int INDEX_MACD = 22;
+
+    public static final int GROUP_COUNT = 23;
 }

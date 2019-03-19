@@ -13,12 +13,6 @@ import android.widget.ProgressBar;
 
 import com.icechao.klinelib.R;
 import com.icechao.klinelib.base.BaseKLineChartView;
-import com.icechao.klinelib.draw.KDJDraw;
-import com.icechao.klinelib.draw.MACDDraw;
-import com.icechao.klinelib.draw.MainDraw;
-import com.icechao.klinelib.draw.RSIDraw;
-import com.icechao.klinelib.draw.VolumeDraw;
-import com.icechao.klinelib.draw.WRDraw;
 import com.icechao.klinelib.utils.ViewUtil;
 
 /*************************************************************************
@@ -35,12 +29,12 @@ public class KLineChartView extends BaseKLineChartView {
 
     private ProgressBar mProgressBar;
 
-    private MACDDraw mMACDDraw;
-    private RSIDraw mRSIDraw;
-    private MainDraw mMainDraw;
-    private KDJDraw mKDJDraw;
-    private WRDraw mWRDraw;
-    private VolumeDraw mVolumeDraw;
+//    private MACDDraw mMACDDraw;
+//    private RSIDraw mRSIDraw;
+    //    private MainDraw mMainDraw;
+//    private KDJDraw mKDJDraw;
+//    private WRDraw mWRDraw;
+//    private VolumeDraw mVolumeDraw;
 
 
     public KLineChartView(Context context) {
@@ -62,21 +56,9 @@ public class KLineChartView extends BaseKLineChartView {
 
     private void initView(Context context) {
 
-        mVolumeDraw = new VolumeDraw(context);
-        mMACDDraw = new MACDDraw(context, getResources().getColor(R.color.chart_up), getResources().getColor(R.color.chart_down));
-        mWRDraw = new WRDraw(context);
-        mKDJDraw = new KDJDraw(context);
-        mRSIDraw = new RSIDraw(context);
-        mMainDraw = new MainDraw(context);
-        addChildDraw(mMACDDraw);
-        addChildDraw(mKDJDraw);
-        addChildDraw(mRSIDraw);
-        addChildDraw(mWRDraw);
-        setVolDraw(mVolumeDraw);
-        setMainDraw(mMainDraw);
 
 
-        mVolumeDraw.setVolLeftColor(getResources().getColor(R.color.chart_text));
+        setVolLeftColor(getResources().getColor(R.color.chart_text));
         setPriceLineColor(getResources().getColor(R.color.chart_text));
         setPriceLineWidth(ViewUtil.Dp2Px(context, 1));
         setPriceLineRightColor(getResources().getColor(R.color.right_index));
@@ -230,21 +212,21 @@ public class KLineChartView extends BaseKLineChartView {
      * 设置DIF颜色
      */
     public void setDIFColor(int color) {
-        mMACDDraw.setDIFColor(color);
+        super.setDIFColor(color);
     }
 
     /**
      * 设置DEA颜色
      */
     public void setDEAColor(int color) {
-        mMACDDraw.setDEAColor(color);
+        super.setDEAColor(color);
     }
 
     /**
      * 设置MACD颜色
      */
     public void setMACDColor(int color) {
-        mMACDDraw.setMACDColor(color);
+        super.setMACDColor(color);
     }
 
     /**
@@ -253,49 +235,49 @@ public class KLineChartView extends BaseKLineChartView {
      * @param MACDWidth width
      */
     public void setMACDWidth(float MACDWidth) {
-        mMACDDraw.setMACDWidth(MACDWidth);
+        super.setMACDWidth(MACDWidth);
     }
 
     /**
      * 设置K颜色
      */
     public void setKColor(int color) {
-        mKDJDraw.setKColor(color);
+        super.setKColor(color);
     }
 
     /**
      * 设置D颜色
      */
     public void setDColor(int color) {
-        mKDJDraw.setDColor(color);
+        super.setDColor(color);
     }
 
     /**
      * 设置J颜色
      */
     public void setJColor(int color) {
-        mKDJDraw.setJColor(color);
+        super.setJColor(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR1Color(int color) {
-        mWRDraw.setR1Color(color);
+        super.setR1Color(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR2Color(int color) {
-        mWRDraw.setR2Color(color);
+        super.setR2Color(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR3Color(int color) {
-        mWRDraw.setR3Color(color);
+        super.setR3Color(color);
     }
 
     /**
@@ -304,8 +286,8 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaOneColor(int color) {
-        mMainDraw.setMaOneColor(color);
-        mVolumeDraw.setMa5Color(color);
+        super.setMaOneColor(color);
+//        mVolumeDraw.setMa5Color(color);
     }
 
     /**
@@ -314,8 +296,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaTwoColor(int color) {
-        mMainDraw.setMaTwoColor(color);
-        mVolumeDraw.setMa10Color(color);
+        super.setMaTwoColor(color);
     }
 
     /**
@@ -324,7 +305,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaThreeColor(int color) {
-        mMainDraw.setMaThreeColor(color);
+        super.setMaThreeColor(color);
     }
 
     /**
@@ -333,7 +314,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param textSize textsize
      */
     public void setSelectorTextSize(float textSize) {
-        mMainDraw.setSelectorTextSize(textSize);
+        super.setSelectorTextSize(textSize);
     }
 
     /**
@@ -342,7 +323,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color Color
      */
     public void setSelectorBackgroundColor(int color) {
-        mMainDraw.setSelectorBackgroundColor(color);
+        super.setSelectorBackgroundColor(color);
     }
 
     /**
@@ -351,9 +332,9 @@ public class KLineChartView extends BaseKLineChartView {
      * @param candleWidth candleWidth
      */
     public void setCandleWidth(float candleWidth) {
-        mMainDraw.setCandleWidth(candleWidth);
+        super.setCandleWidth(candleWidth);
         //量的柱状图与蜡烛图同宽
-        mVolumeDraw.setBarWidth(candleWidth);
+        super.setBarWidth(candleWidth);
     }
 
     /**
@@ -362,52 +343,32 @@ public class KLineChartView extends BaseKLineChartView {
      * @param candleLineWidth candleLineWidth
      */
     public void setCandleLineWidth(float candleLineWidth) {
-        mMainDraw.setCandleLineWidth(candleLineWidth);
+        super.setCandleLineWidth(candleLineWidth);
     }
 
     /**
      * 蜡烛是否空心
      */
     public void setCandleSolid(boolean candleSolid) {
-        mMainDraw.setStroke(candleSolid);
+        super.setStroke(candleSolid);
     }
 
     public void setRSI1Color(int color) {
-        mRSIDraw.setRSI1Color(color);
+        super.setRSI1Color(color);
     }
 
     public void setRSI2Color(int color) {
-        mRSIDraw.setRSI2Color(color);
+        super.setRSI2Color(color);
     }
 
     public void setRSI3Color(int color) {
-        mRSIDraw.setRSI3Color(color);
-    }
-
-    @Override
-    public void setTextSize(float textSize) {
-        super.setTextSize(textSize);
-        mMainDraw.setTextSize(textSize);
-        mRSIDraw.setTextSize(textSize);
-        mMACDDraw.setTextSize(textSize);
-        mKDJDraw.setTextSize(textSize);
-        mWRDraw.setTextSize(textSize);
-        mVolumeDraw.setTextSize(textSize);
-    }
-
-    public void setLineWidth(float lineWidth) {
-        mMainDraw.setLineWidth(lineWidth);
-        mRSIDraw.setLineWidth(lineWidth);
-        mMACDDraw.setLineWidth(lineWidth);
-        mKDJDraw.setLineWidth(lineWidth);
-        mWRDraw.setLineWidth(lineWidth);
-        mVolumeDraw.setLineWidth(lineWidth);
+        super.setRSI3Color(color);
     }
 
     @Override
     public void setTextColor(int color) {
         super.setTextColor(color);
-        mMainDraw.setSelectorTextColor(color);
+        super.setSelectorTextColor(color);
     }
 
 

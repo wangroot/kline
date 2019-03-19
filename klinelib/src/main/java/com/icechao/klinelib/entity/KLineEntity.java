@@ -127,18 +127,18 @@ public class KLineEntity implements IKLine {
         return ma10Volume;
     }
 
-
+    @SerializedName("Date")
     public String date;
 
     @SerializedName("Open")
     public float open;
-
+    @SerializedName("High")
     public float high;
-
+    @SerializedName("Low")
     public float low;
-
+    @SerializedName("Close")
     public float close;
-
+    @SerializedName("Volume")
     public float volume;
 
     public float maOne;

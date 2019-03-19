@@ -3,7 +3,6 @@ package com.icechao.klinelib.utils;
 import android.text.Editable;
 import android.text.TextUtils;
 
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

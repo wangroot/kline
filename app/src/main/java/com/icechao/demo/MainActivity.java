@@ -102,7 +102,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 return String.format("%.2f", value);
             }
         });
-        chartView.getVolDraw().setValueFormatter(new ValueFormatter() {
+        chartView.setVolValueFormatter(new ValueFormatter() {
             @Override
             public String format(float value) {
                 return String.format("%.2f", value);
@@ -117,10 +117,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             @Override
             public void run() {
                 SystemClock.sleep(1000);
-                runOnUiThread(() -> {
-                    all = DataRequest.getALL(MainActivity.this);
-                    adapter.resetData(all);
-                });
+                all = DataRequest.getALL(MainActivity.this);
+                adapter.resetData(all);
+
             }
         }.start();
     }
@@ -154,19 +153,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 break;
             case R.id.text_view_macd:
                 chartView.hideSelectData();
-                chartView.setChildDraw(0);
+                chartView.setChildDraw(1);
                 break;
             case R.id.text_view_kdj:
                 chartView.hideSelectData();
-                chartView.setChildDraw(1);
+                chartView.setChildDraw(2);
                 break;
             case R.id.text_view_rsi:
                 chartView.hideSelectData();
-                chartView.setChildDraw(2);
+                chartView.setChildDraw(3);
                 break;
             case R.id.text_view_wr:
                 chartView.hideSelectData();
-                chartView.setChildDraw(3);
+                chartView.setChildDraw(4);
                 break;
 
         }

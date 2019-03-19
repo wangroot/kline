@@ -5,8 +5,6 @@ import android.database.DataSetObserver;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.icechao.klinelib.entity.IDepth;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +18,7 @@ import java.util.List;
  * @Email        : icechliu@gmail.com
  * @version      : V1
  *************************************************************************/
+@Deprecated
 public abstract class BaseDepthAdapter implements IAdapter {
 
     Handler handler = new Handler(Looper.getMainLooper());

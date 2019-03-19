@@ -84,7 +84,13 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (!isLongPress && !isMultipleTouch()) {
-            scrollBy(Math.round(distanceX), 0);
+//            scrollBy(Math.round(distanceX), 0);
+            int oldX = scrollX;
+            scrollX -= Math.round(distanceX);
+            if (scrollX != oldX) {
+                onScrollChanged(scrollX, 0, oldX, 0);
+                invalidate();
+            }
             return true;
         }
         return false;
@@ -108,34 +114,42 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
 
     @Override
     public void computeScroll() {
+
         if (overScroller.computeScrollOffset()) {
             if (!isTouch()) {
-                scrollTo(overScroller.getCurrX(), overScroller.getCurrY());
+//                scrollTo(overScroller.getCurrX(), overScroller.getCurrY());
+                int oldX = scrollX;
+                scrollX = overScroller.getCurrX();
+                if (scrollX != oldX) {
+                    onScrollChanged(scrollX, 0, oldX, 0);
+                    invalidate();
+                }
             } else {
+
                 overScroller.forceFinished(true);
             }
         }
     }
 
-    @Override
-    public void scrollBy(int x, int y) {
-        scrollTo(scrollX - Math.round(x / scaleX), 0);
-    }
-
-    @Override
-    public void scrollTo(int x, int y) {
-        if (!isScrollEnable()) {
-            overScroller.forceFinished(true);
-            return;
-        }
-        int oldX = scrollX;
-        scrollX = x;
-        if (scrollX != oldX) {
-            onScrollChanged(scrollX, 0, oldX, 0);
-            invalidate();
-        }
-
-    }
+//    @Override
+//    public void scrollBy(int x, int y) {
+//        scrollTo(scrollX - Math.round(x / scaleX), 0);
+//    }
+//
+//    @Override
+//    public void scrollTo(int x, int y) {
+//        if (!isScrollEnable()) {
+//            overScroller.forceFinished(true);
+//            return;
+//        }
+//        int oldX = scrollX;
+//        scrollX = x;
+//        if (scrollX != oldX) {
+//            onScrollChanged(scrollX, 0, oldX, 0);
+//            invalidate();
+//        }
+//
+//    }
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
@@ -159,7 +173,7 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
     }
 
     protected void onScaleChanged(float scale, float oldScale) {
-        invalidate();
+        animValidate();
     }
 
     @Override
@@ -192,7 +206,7 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
                 }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                invalidate();
+                animValidate();
                 break;
             case MotionEvent.ACTION_UP:
                 if (x == event.getX()) {
@@ -201,12 +215,12 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
                     }
                 }
                 touch = false;
-                invalidate();
+                animValidate();
                 break;
             case MotionEvent.ACTION_CANCEL:
                 isLongPress = false;
                 touch = false;
-                invalidate();
+                animValidate();
                 break;
             default:
                 break;
@@ -319,4 +333,12 @@ public abstract class ScrollAndScaleView extends RelativeLayout implements
         isScaleEnable = scaleEnable;
     }
 
+
+
+    /**
+     * 刷新界面
+     */
+    public void animValidate() {
+        invalidate();
+    }
 }

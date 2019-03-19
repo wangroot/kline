@@ -4,8 +4,6 @@ import android.database.DataSetObserver;
 
 import com.icechao.klinelib.entity.KLineEntity;
 
-import java.util.Date;
-
 /*************************************************************************
  * Description   :
  *
@@ -39,7 +37,7 @@ public interface IAdapter<T> {
      * @param position
      * @return
      */
-    Date getDate(int position);
+    String getDate(int position);
 
     /**
      * 注册一个数据观察者

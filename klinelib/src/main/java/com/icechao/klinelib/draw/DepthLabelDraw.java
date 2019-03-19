@@ -15,6 +15,7 @@ import android.graphics.RectF;
  * @Email        : icechliu@gmail.com
  * @version      : V1
  *************************************************************************/
+@Deprecated
 public class DepthLabelDraw {
 
     private Paint labelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);

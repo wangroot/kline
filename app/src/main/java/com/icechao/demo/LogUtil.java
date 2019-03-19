@@ -1,7 +1,5 @@
 package com.icechao.demo;
 
-import android.util.Log;
-
 import com.orhanobut.logger.Logger;
 
 

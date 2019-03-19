@@ -1,6 +1,5 @@
 package com.icechao.klinelib.entity;
 
-import java.io.PrintStream;
 import java.io.Serializable;
 
 /*************************************************************************

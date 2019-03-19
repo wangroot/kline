@@ -19,21 +19,11 @@ import android.os.Looper;
 
 public abstract class BaseKLineChartAdapter implements IAdapter {
 
-    Handler handler = new Handler(Looper.getMainLooper());
+    private Handler handler = new Handler(Looper.getMainLooper());
     private final DataSetObservable mDataSetObservable = new DataSetObservable();
 
-    Runnable notifyDataChangeRunable = new Runnable() {
-        @Override
-        public void run() {
-            mDataSetObservable.notifyChanged();
-        }
-    };
-    Runnable notifyDataWillChangeRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mDataSetObservable.notifyInvalidated();
-        }
-    };
+    private Runnable notifyDataChangeRunable = () -> mDataSetObservable.notifyChanged();
+    private Runnable notifyDataWillChangeRunnable = () -> mDataSetObservable.notifyInvalidated();
 
     @Override
     public void notifyDataSetChanged() {

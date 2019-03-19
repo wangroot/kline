@@ -3,9 +3,9 @@ package com.icechao.klinelib.adapter;
 import com.icechao.klinelib.base.BaseKLineChartAdapter;
 import com.icechao.klinelib.entity.KLineEntity;
 import com.icechao.klinelib.utils.DataHelper;
+import com.icechao.klinelib.utils.NewDataHelper;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,6 +17,7 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
 
 
     private List<KLineEntity> datas = new ArrayList<>();
+    private float[] points;
 
     public KLineChartAdapter() {
 
@@ -42,8 +43,8 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
     }
 
     @Override
-    public Date getDate(int position) {
-        return new Date(datas.get(position).getDate());
+    public String getDate(int position) {
+        return (datas.get(position).getDate());
     }
 
     /**
@@ -63,6 +64,7 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
         if (null != data && data.size() > 0) {
             datas.addAll(data);
             this.lastData = data.get(data.size() - 1);
+            points = NewDataHelper.calculate(datas);
             notifyDataSetChanged();
         }
     }
@@ -113,5 +115,9 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
 
     public List<KLineEntity> getData() {
         return datas;
+    }
+
+    public float[] getPoints() {
+        return points;
     }
 }

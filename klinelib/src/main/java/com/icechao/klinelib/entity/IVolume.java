@@ -20,10 +20,6 @@ public interface IVolume  extends Serializable {
      */
     float getOpenPrice();
 
-    /**
-     * 收盘价
-     */
-    float getClosePrice();
 
     /**
      * 成交量

@@ -1,11 +1,9 @@
 package com.icechao.klinelib.adapter;
 
 import com.icechao.klinelib.base.BaseDepthAdapter;
-import com.icechao.klinelib.entity.IDepth;
 import com.icechao.klinelib.entity.KLineEntity;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /*************************************************************************
@@ -45,7 +43,7 @@ public class DepthDataAdapter extends BaseDepthAdapter {
     }
 
     @Override
-    public Date getDate(int position) {
+    public String getDate(int position) {
         return null;
     }
 
