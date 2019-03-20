@@ -768,7 +768,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
 
         //交易量图的Y轴label
-        String maxVol =volDraw.getValueFormatter().format(volMaxValue);
+        String maxVol = volDraw.getValueFormatter().format(volMaxValue);
         canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
 
         //子图Y轴label
@@ -1156,7 +1156,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             return;
         }
         float tempWidth = chartItemWidth * scale;
-        float newCount = (width / tempWidth) ;
+        float newCount = (width / tempWidth);
         float oldCount = (width / chartItemWidth / oldScale);
         float difCount = (newCount - oldCount) / 2;
         setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
@@ -2056,5 +2056,10 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     public boolean isAnimationLast() {
         return isAnimationLast;
+    }
+
+    public void setIndexPaddingTop(int indexPaddingTop) {
+        ((MainDraw<ICandle>) mainDraw).setIndexPaddingTop(indexPaddingTop);
+
     }
 }

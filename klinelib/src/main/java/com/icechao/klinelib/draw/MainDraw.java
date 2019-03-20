@@ -31,6 +31,7 @@ import java.util.Arrays;
 public class MainDraw<T extends ICandle> implements IChartDraw<T> {
 
     private int itemCount;
+    private int indexPaddingTop;
     private final float padding;
     private final float margin;
     private String[] strings = new String[8];
@@ -143,7 +144,7 @@ public class MainDraw<T extends ICandle> implements IChartDraw<T> {
     public void drawText(@NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position, float x, float y) {
 
         //修改头文字显示在顶部
-        y = maTextHeight;
+        y = maTextHeight + indexPaddingTop;
         if (view.isLine()) {
 
         } else {
@@ -259,12 +260,7 @@ public class MainDraw<T extends ICandle> implements IChartDraw<T> {
     }
 
     private void drawCandle(Canvas canvas, float x, float high, float low, float open, float close, float cancleLeft, float candleright, Paint upPaint, Paint upLinePaint) {
-//        path.moveTo(x, high);
-//        path.lineTo(x, open);
-//        path.moveTo(x, close);
-//        path.lineTo(x, low);
         canvas.drawRect(cancleLeft, close, candleright, open, upPaint);
-//        canvas.drawLine(x,high,x,open,x,close,x,low, upLinePaint);
         canvas.drawLine(x, high, x, open, upPaint);
         canvas.drawLine(x, close, x, low, upPaint);
     }
@@ -498,6 +494,11 @@ public class MainDraw<T extends ICandle> implements IChartDraw<T> {
     public void setDownColor(int color) {
         downPaint.setColor(color);
         downLinePaint.setColor(color);
+    }
+
+
+    public void setIndexPaddingTop(int indexPaddingTop) {
+        this.indexPaddingTop = indexPaddingTop;
     }
 
     public void setMinuteLineColor(int color) {
