@@ -299,7 +299,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             } else {
                 int count = itemsCount;
                 setItemCount(dataCount);
-                ICandle item = getAdapter().getItem(itemsCount - 1);
+                ICandle item = dataAdapter.getLastData();
                 float closePrice = 0f;
                 float vol = 0f;
                 float high = 0f;
@@ -518,10 +518,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     private float padding;
     private float margin;
+
     private String[] strings = new String[8];
 
 
-    private float candleWidth = 0;
+    private float candleWidth;
     private Paint lineAreaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint upPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint upLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -726,25 +727,22 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         for (int i = screenLeftIndex; i <= screenRightIndex; i++) {
 
             int temp = GROUP_COUNT * i;
-
             float curHigh = points[temp + INDEX_HIGH];
             float curLow = points[temp + INDEX_LOW];
             float curOpen = points[temp + INDEX_OPEN];
             float curClose = points[temp + INDEX_CLOSE];
             float curVol = points[temp + INDEX_VOL];
-
             float lastX = getX(i - 1);
             float curX = getX(i);
-
+            float laseIndex, curIndex;
             if (isLine()) {
+                float lastClosePrice = points[temp + INDEX_CLOSE - GROUP_COUNT];
                 if (i == 0) {
                     continue;
                 }
-                float lastClosePrice = points[temp + INDEX_CLOSE - GROUP_COUNT];
                 if (i == itemsCount - 1) {
                     drawEndMinutsLine(canvas, linePaint, lastX, lastClosePrice, curX);
                     drawEndMinutsLineArea(canvas, lineAreaPaint, lastX, lastClosePrice, curX);
-
                 } else {
                     drawLine(canvas, linePaint, lastX, lastClosePrice, curX, curClose);
                     drawMinutsLineArea(canvas, lineAreaPaint, lastX, lastClosePrice, curX, curClose);
@@ -752,27 +750,24 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
             } else {
                 drawCandle(canvas, curX, curHigh, curLow, curOpen, curClose, i);
-                if (i == 0) {
-                    continue;
-                }
                 Status status = getStatus();
-                if (status == Status.MA) {
+                if (status == Status.MA && i != 0) {
                     //画第一根ma
-                    float lastMa = points[temp + INDEX_MA_1 - GROUP_COUNT];
-                    float curMa = points[temp + INDEX_MA_1];
-                    drawIndexLine(canvas, indexPaintOne, i, lastX, curX, lastMa, curMa, maOne);
+                    laseIndex = points[temp + INDEX_MA_1 - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_MA_1];
+                    drawIndexLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, maOne);
                     //画第二根ma
-                    lastMa = points[temp + INDEX_MA_2 - GROUP_COUNT];
-                    curMa = points[temp + INDEX_MA_2];
-                    drawIndexLine(canvas, indexPaintTwo, i, lastX, curX, lastMa, curMa, maTwo);
+                    laseIndex = points[temp + INDEX_MA_2 - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_MA_2];
+                    drawIndexLine(canvas, indexPaintTwo, i, lastX, curX, laseIndex, curIndex, maTwo);
                     //画第三根ma
-                    lastMa = points[temp + INDEX_MA_3 - GROUP_COUNT];
-                    curMa = points[temp + INDEX_MA_3];
-                    drawIndexLine(canvas, indexPaintThree, i, lastX, curX, lastMa, curMa, maThree);
-                } else if (status == Status.BOLL) {
+                    laseIndex = points[temp + INDEX_MA_3 - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_MA_3];
+                    drawIndexLine(canvas, indexPaintThree, i, lastX, curX, laseIndex, curIndex, maThree);
+                } else if (status == Status.BOLL && i != 0) {
                     //画boll
-                    float laseIndex = points[temp + INDEX_BOLL_UP - GROUP_COUNT];
-                    float curIndex = points[temp + INDEX_BOLL_UP];
+                    laseIndex = points[temp + INDEX_BOLL_UP - GROUP_COUNT];
+                    curIndex = points[temp + INDEX_BOLL_UP];
                     drawIndexLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, bollUp);
                     laseIndex = points[temp + INDEX_BOLL_MB - GROUP_COUNT];
                     curIndex = points[temp + INDEX_BOLL_MB];
@@ -783,8 +778,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                 }
             }
             drawVol(canvas, i, curX, curOpen, curClose, curVol);
-            float laseIndex = points[temp + INDEX_VOL_MA_1 - GROUP_COUNT];
-            float curIndex = points[temp + INDEX_VOL_MA_1];
+            laseIndex = points[temp + INDEX_VOL_MA_1 - GROUP_COUNT];
+            curIndex = points[temp + INDEX_VOL_MA_1];
             drawVolLine(canvas, indexPaintOne, i, lastX, curX, laseIndex, curIndex, volMa1);
             laseIndex = points[temp + INDEX_VOL_MA_2 - GROUP_COUNT];
             curIndex = points[temp + INDEX_VOL_MA_2];
@@ -864,7 +859,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     private void drawIndexLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
         if (Float.MIN_VALUE != lastMa) {
-            if (itemsCount - 1 == i && 0 != animMa) {
+            if (itemsCount - 1 == i && 0 != animMa && i != 0) {
                 drawLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
             } else {
                 drawLine(canvas, indexPaint, lastX, lastMa, curX, curMa);
@@ -873,7 +868,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     private void drawVolLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
-        if (Float.MIN_VALUE != lastMa) {
+        if (Float.MIN_VALUE != lastMa && i != 0) {
             if (itemsCount - 1 == i && 0 != animMa) {
                 drawVolLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
             } else {
@@ -884,7 +879,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     private void drawChildLine(Canvas canvas, Paint indexPaint, int i, float lastX, float curX, float lastMa, float curMa, float animMa) {
         if (Float.MIN_VALUE != lastMa) {
-            if (itemsCount - 1 == i && 0 != animMa) {
+            if (itemsCount - 1 == i && 0 != animMa && i != 0) {
                 drawChildLine(canvas, indexPaint, lastX, lastMa, curX, animMa);
             } else {
                 drawChildLine(canvas, indexPaint, lastX, lastMa, curX, curMa);
@@ -1021,7 +1016,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
 
         //子图Y轴label
-        if (0 != childDrawPosition) {
+        if (childDrawPosition > 0) {
             String childLable = getValueFormatter().format(childMaxValue);
             canvas.drawText(childLable, width - textPaint.measureText(childLable), volRect.bottom + baseLine, textPaint);
         }
