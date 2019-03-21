@@ -740,6 +740,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
     }
 
+    private boolean fitXlabel = true;
+
 
     /**
      * 绘制文字
@@ -764,7 +766,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         for (int i = 0; i <= gridRowCount; i++) {
             String text = formatValue(mainMaxValue - i * rowValue);
             float v = rowSpace * i + topPadding;
-            canvas.drawText(text, width - textPaint.measureText(text), v -2, textPaint);
+            canvas.drawText(text, width - textPaint.measureText(text), v - 2, textPaint);
         }
 
         //交易量图的Y轴label
@@ -788,9 +790,28 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         float halfWidth = chartItemWidth / 2 * getScaleX();
         float startX = getX(screenLeftIndex) - halfWidth;
         float stopX = getX(screenRightIndex) + halfWidth;
-
-        for (int i = 1; i < gridColumns; i++) {
-            float tempX = columnSpace * i;
+        int startLabelCount;
+        int endLabelCount;
+        if (fitXlabel) {
+            //X轴最左侧的值
+            float translateX = xToTranslateX(0);
+            if (translateX >= startX && translateX <= stopX) {
+                canvas.drawText(formatDateTime(getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
+            }
+            //X轴最右侧的值
+            translateX = xToTranslateX(width);
+            if (translateX >= startX && translateX <= stopX) {
+                String text = formatDateTime(getAdapter().getDate(screenRightIndex));
+                canvas.drawText(text, width - textPaint.measureText(text), y, textPaint);
+            }
+            startLabelCount = 1;
+            endLabelCount = gridColumns;
+        } else {
+            startLabelCount = 0;
+            endLabelCount = gridColumns + 1;
+        }
+        for (; startLabelCount < endLabelCount; startLabelCount++) {
+            float tempX = columnSpace * startLabelCount;
             float translateX = xToTranslateX(tempX);
             if (translateX >= startX && translateX <= stopX) {
                 int index = indexOfTranslateX(translateX);
@@ -798,17 +819,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                 canvas.drawText(text, tempX - textPaint.measureText(text) / 2, y, textPaint);
             }
         }
-        //X轴最左侧的值
-        float translateX = xToTranslateX(0);
-        if (translateX >= startX && translateX <= stopX) {
-            canvas.drawText(formatDateTime(getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
-        }
-        //X轴最右侧的值
-        translateX = xToTranslateX(width);
-        if (translateX >= startX && translateX <= stopX) {
-            String text = formatDateTime(getAdapter().getDate(screenRightIndex));
-            canvas.drawText(text, width - textPaint.measureText(text), y, textPaint);
-        }
+
         if (isLongPress) {
             // 选中状态下的Y值
             IKLine point = (IKLine) getItem(selectedIndex);
@@ -1847,6 +1858,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
          * @param index 选中点的索引
          */
         void onSelectedChanged(BaseKLineChartView view, Object point, int index);
+
     }
 
     public void setPriceLineWidth(float lineWidth) {
@@ -2060,6 +2072,9 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     public void setIndexPaddingTop(int indexPaddingTop) {
         ((MainDraw<ICandle>) mainDraw).setIndexPaddingTop(indexPaddingTop);
+    }
 
+    public void setFitXlabel(boolean fitXlabel) {
+        this.fitXlabel = fitXlabel;
     }
 }
