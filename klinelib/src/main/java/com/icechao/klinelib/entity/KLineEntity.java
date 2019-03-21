@@ -94,7 +94,7 @@ public class KLineEntity implements IKLine {
 
     @Override
     public float getRsi() {
-        return rsi;
+        return rOne;
     }
 
     @Override
@@ -168,8 +168,6 @@ public class KLineEntity implements IKLine {
     public float wrOne;
     public float wrTwo;
     public float wrThree;
-
-    public float rsi;
 
     public float up;
 

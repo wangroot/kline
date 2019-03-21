@@ -142,6 +142,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             int i = random.nextInt() * 1123 % 400;
             KLineEntity kLineEntity = all.get(Math.abs(i));
             KLineEntity kLineEntity1 = new KLineEntity();
+            kLineEntity1.Date = kLineEntity.Date;
             kLineEntity1.High = kLineEntity.High;
             kLineEntity1.Close = kLineEntity.Close;
             kLineEntity1.Low = kLineEntity.Low;

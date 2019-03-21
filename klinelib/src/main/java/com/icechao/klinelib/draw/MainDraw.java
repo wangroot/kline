@@ -252,17 +252,17 @@ public class MainDraw<T extends ICandle> implements IChartDraw<T> {
         float r = candleWidth / 2 * view.getScaleX();
         float cancleLeft = x - r;
         float candleright = x + r;
-        if (open > close) {
+        if (open <= close) {
             drawCandle(canvas, x, high, low, close, open, cancleLeft, candleright, downPaint, downLinePaint);
         } else {
             drawCandle(canvas, x, high, low, open, close + 1, cancleLeft, candleright, upPaint, upLinePaint);
         }
     }
 
-    private void drawCandle(Canvas canvas, float x, float high, float low, float open, float close, float cancleLeft, float candleright, Paint upPaint, Paint upLinePaint) {
-        canvas.drawRect(cancleLeft, close, candleright, open, upPaint);
-        canvas.drawLine(x, high, x, open, upPaint);
-        canvas.drawLine(x, close, x, low, upPaint);
+    private void drawCandle(Canvas canvas, float x, float high, float low, float open, float close, float cancleLeft, float candleright, Paint candlePaint, Paint linePaint) {
+        canvas.drawRect(cancleLeft, close, candleright, open, candlePaint);
+        canvas.drawLine(x, high, x, open, linePaint);
+        canvas.drawLine(x, close, x, low, linePaint);
     }
 
     /**

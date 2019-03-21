@@ -1,7 +1,6 @@
 package com.icechao.klinelib.adapter;
 
 import com.icechao.klinelib.base.BaseDepthAdapter;
-import com.icechao.klinelib.entity.IDepth;
 import com.icechao.klinelib.entity.KLineEntity;
 
 import java.util.Collections;

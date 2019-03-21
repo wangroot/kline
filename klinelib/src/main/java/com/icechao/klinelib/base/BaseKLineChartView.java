@@ -1179,10 +1179,12 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             width = getMeasuredWidth();
         }
         if (dataLength >= width) {
+            setScrollEnable(true);
             return -(dataLength - width);
         } else {
+            setScrollEnable(false);
 //            return width - dataLength;
-            return 0;
+            return chartItemWidth * scaleX / 2;
         }
     }
 
@@ -1221,7 +1223,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         float newCount = (width / tempWidth);
         float oldCount = (width / chartItemWidth / oldScale);
         float difCount = (newCount - oldCount) / 2;
-        setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
+        if (screenLeftIndex != 0) {
+            setTranslatedX(canvasTranslateX / oldScale * scale + difCount * tempWidth);
+        } else {
+            setTranslatedX(getMinTranslate());
+        }
         super.onScaleChanged(scale, oldScale);
     }
 
@@ -1351,7 +1357,15 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     public int indexOfTranslateX(float translateX) {
-        return (int) (translateX / chartItemWidth / getScaleX());
+        float dataLength = getDataLength();
+        if (width == 0) {
+            width = getMeasuredWidth();
+        }
+        if (dataLength < width) {
+            return (int) ((translateX + canvasTranslateX) / chartItemWidth / scaleX + 0.5);
+        } else {
+            return (int) (translateX / chartItemWidth / getScaleX());
+        }
     }
 
 

@@ -35,7 +35,7 @@ public class RSIDraw implements IChartDraw<IRSI> {
 
     @Override
     public void drawTranslated(@Nullable IRSI lastPoint, @NonNull IRSI curPoint, float lastX, float curX, @NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position) {
-        if (0 != lastPoint.getRsi()) {
+        if (Float.MIN_VALUE != lastPoint.getRsi()) {
             view.drawChildLine(canvas, mRSI1Paint, lastX, lastPoint.getRsi(), curX, curPoint.getRsi());
         }
     }
@@ -43,7 +43,7 @@ public class RSIDraw implements IChartDraw<IRSI> {
     @Override
     public void drawText(@NonNull Canvas canvas, @NonNull BaseKLineChartView view, int position, float x, float y) {
         IRSI point = (IRSI) view.getItem(position);
-        if (0 != point.getRsi()) {
+        if (Float.MIN_VALUE !=  point.getRsi()) {
             String text = "RSI(14)  ";
             Paint textPaint = view.getTextPaint();
             canvas.drawText(text, x, y, textPaint);
