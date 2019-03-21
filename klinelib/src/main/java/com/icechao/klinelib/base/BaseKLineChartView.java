@@ -590,16 +590,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     /**
-     * 获取主视图value对应的Y值
-     *
-     * @param value
-     * @return
-     */
-    public float getMainY(float value) {
-        return (mainMaxValue - value) * mainScaleY + mainRect.top;
-    }
-
-    /**
      * 设置当前K线总数据个数
      *
      * @param itemCount
@@ -627,13 +617,44 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
     /**
+     * 获取主视图value对应的Y值
+     *
+     * @param value
+     * @return
+     */
+    public float getMainY(float value) {
+        float v = mainMaxValue - value;
+        if (v < 0) {
+            return mainRect.top + 1;
+        }
+        return borderCheck(v * mainScaleY + mainRect.top, mainRect.bottom);
+    }
+
+    /**
+     * Y轴值的边界检测
+     *
+     * @param v
+     * @param bottom
+     * @return
+     */
+
+    private float borderCheck(float v, int bottom) {
+        return v > bottom ? bottom - 1 : v;
+    }
+
+
+    /**
      * 获取交易量视图上的value对应的Y值
      *
      * @param value
      * @return
      */
     public float getVolY(float value) {
-        return (volMaxValue - value) * volScaleY + volRect.top;
+        float v = volMaxValue - value;
+        if (v < 0) {
+            return volRect.top + 1;
+        }
+        return borderCheck(v * volScaleY + volRect.top, volRect.bottom);
     }
 
     /**
@@ -643,7 +664,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      * @return
      */
     public float getChildY(float value) {
-        return (childMaxValue - value) * childScaleY + childRect.top;
+        float v = childMaxValue - value;
+        if (v < 0) {
+            return childRect.top;
+        }
+        return borderCheck(v * childScaleY + childRect.top, childRect.bottom);
     }
 
     /**
@@ -1155,7 +1180,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         }
         if (dataLength >= width) {
             return -(dataLength - width);
-        }else {
+        } else {
 //            return width - dataLength;
             return 0;
         }
