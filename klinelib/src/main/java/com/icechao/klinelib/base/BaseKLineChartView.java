@@ -1090,7 +1090,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
     public void notifyChanged() {
         if (1f == canvasTranslateX && width != 0) {
-            setTranslatedX(-(getDataLength() - width));
+            setTranslatedX(getMinTranslate());
         }
         invalidate();
     }
@@ -1153,7 +1153,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         if (width == 0) {
             width = getMeasuredWidth();
         }
-        if (dataLength >= width - getmOverScrollRange()) {
+        if (dataLength >= width) {
             return -(dataLength - width);
         }else {
 //            return width - dataLength;
@@ -1167,7 +1167,7 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      *
      * @return 最大值
      */
-    private float getMaxTranslateX() {
+    private float getMaxTranslate() {
         float dataLength = getDataLength();
         if (dataLength >= width) {
             return isLine ? 0 : chartItemWidth * getScaleX() / 2;
@@ -1209,8 +1209,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     public void setTranslatedX(float mTranslateX) {
         if (mTranslateX < getMinTranslate()) {
             mTranslateX = getMinTranslate();
-        } else if (mTranslateX > getMaxTranslateX()) {
-            mTranslateX = getMaxTranslateX();
+        } else if (mTranslateX > getMaxTranslate()) {
+            mTranslateX = getMaxTranslate();
         }
         this.canvasTranslateX = mTranslateX;
     }
