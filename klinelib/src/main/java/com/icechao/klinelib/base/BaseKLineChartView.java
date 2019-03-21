@@ -660,12 +660,12 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      * @param canvas canvas
      */
     private void drawGird(Canvas canvas) {
-        canvas.drawLine(0, 0, width, 0, gridPaint);
+//        canvas.drawLine(0, 0, width, 0, gridPaint);
         //横向的grid
         float rowSpace = displayHeight / gridRows;
         for (int i = 0; i <= gridRows; i++) {
-            float y = rowSpace * i;
-            canvas.drawLine(0, y + mainRect.top, width, y + mainRect.top, gridPaint);
+            float y = rowSpace * i + topPadding;
+            canvas.drawLine(0, y, width, y, gridPaint);
         }
         canvas.drawLine(0, volRect.bottom, width, volRect.bottom, gridPaint);
         float columnSpace = width / gridColumns;
@@ -748,7 +748,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     private void drawText(Canvas canvas) {
 
-        int textY = mainRect.top - 5;
         float rowValue;
         int gridRowCount;
         float rowSpace = displayHeight / gridRows;
@@ -764,7 +763,8 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         //Y轴上网络的值
         for (int i = 0; i <= gridRowCount; i++) {
             String text = formatValue(mainMaxValue - i * rowValue);
-            canvas.drawText(text, width - textPaint.measureText(text), rowSpace * i + textY, textPaint);
+            float v = rowSpace * i + topPadding;
+            canvas.drawText(text, width - textPaint.measureText(text), v -2, textPaint);
         }
 
         //交易量图的Y轴label
