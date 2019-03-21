@@ -23,6 +23,7 @@ import com.icechao.klinelib.view.KLineChartView;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends Activity implements View.OnClickListener, RadioGroup.OnCheckedChangeListener {
 
@@ -119,6 +120,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
 
     }
 
+    int i = 0;
+    Random random = new Random();
+
     private void initData() {
         new Thread() {
             @Override
@@ -127,9 +131,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 runOnUiThread(() -> {
                     all = DataRequest.getALL(MainActivity.this);
                     adapter.resetData(all);
+                    changeLast();
                 });
             }
         }.start();
+    }
+
+    private void changeLast() {
+        handler.postDelayed(() -> {
+            int i = random.nextInt() * 1123 % 400;
+            KLineEntity kLineEntity = all.get(Math.abs(i));
+            KLineEntity kLineEntity1 = new KLineEntity();
+            kLineEntity1.High = kLineEntity.High;
+            kLineEntity1.Close = kLineEntity.Close;
+            kLineEntity1.Low = kLineEntity.Low;
+            kLineEntity1.Volume = kLineEntity.Volume;
+            if (i++ % 10 == 0) {
+                kLineEntity1.open = adapter.getLastData().Close;
+                adapter.addLast(kLineEntity1);
+            } else {
+
+                kLineEntity1.open = adapter.getLastData().open;
+                adapter.changeItem(adapter.getCount() - 1, kLineEntity1);
+            }
+            changeLast();
+
+        }, 1000);
     }
 
 
@@ -366,4 +393,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         return totalList;
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
+    }
 }
