@@ -750,75 +750,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
      */
     private void drawText(Canvas canvas) {
 
-        float rowValue;
-        int gridRowCount;
-        float rowSpace = displayHeight / gridRows;
-        //当显示子视图时,y轴label减少显示一个
-        if (null != childDraw) {
-            gridRowCount = gridRows - 2;
-            rowValue = (mainMaxValue - mainMinValue) / gridRowCount;
-        } else {
-            gridRowCount = gridRows - 1;
-            rowValue = (mainMaxValue - mainMinValue) / gridRowCount;
-        }
 
-        //Y轴上网络的值
-        for (int i = 0; i <= gridRowCount; i++) {
-            String text = formatValue(mainMaxValue - i * rowValue);
-            float v = rowSpace * i + topPadding;
-            canvas.drawText(text, width - textPaint.measureText(text), v - 2, textPaint);
-        }
-
-        //交易量图的Y轴label
-        String maxVol = volDraw.getValueFormatter().format(volMaxValue);
-        canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
-
-        //子图Y轴label
-        if (null != childDraw) {
-            String childLable = childDraw.getValueFormatter().format(childMaxValue);
-            canvas.drawText(childLable, width - textPaint.measureText(childLable), volRect.bottom + baseLine, textPaint);
-        }
+        drawYLabels(canvas);
         //画时间
-        float columnSpace = width / gridColumns;
+        drawXLabels(canvas);
         float y;
-        if (null != childDraw) {
-            y = childRect.bottom + baseLine + 5;
-        } else {
-            y = volRect.bottom + baseLine + 5;
-        }
-
-        float halfWidth = chartItemWidth / 2 * getScaleX();
-        float startX = getX(screenLeftIndex) - halfWidth;
-        float stopX = getX(screenRightIndex) + halfWidth;
-        int startLabelCount;
-        int endLabelCount;
-        if (fitXlabel) {
-            //X轴最左侧的值
-            float translateX = xToTranslateX(0);
-            if (translateX >= startX && translateX <= stopX) {
-                canvas.drawText(formatDateTime(getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
-            }
-            //X轴最右侧的值
-            translateX = xToTranslateX(width);
-            if (translateX >= startX && translateX <= stopX) {
-                String text = formatDateTime(getAdapter().getDate(screenRightIndex));
-                canvas.drawText(text, width - textPaint.measureText(text), y, textPaint);
-            }
-            startLabelCount = 1;
-            endLabelCount = gridColumns;
-        } else {
-            startLabelCount = 0;
-            endLabelCount = gridColumns + 1;
-        }
-        for (; startLabelCount < endLabelCount; startLabelCount++) {
-            float tempX = columnSpace * startLabelCount;
-            float translateX = xToTranslateX(tempX);
-            if (translateX >= startX && translateX <= stopX) {
-                int index = indexOfTranslateX(translateX);
-                String text = formatDateTime(dataAdapter.getDate(index));
-                canvas.drawText(text, tempX - textPaint.measureText(text) / 2, y, textPaint);
-            }
-        }
 
         if (isLongPress) {
             // 选中状态下的Y值
@@ -885,6 +821,89 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
             canvas.drawRect(left, y, right, bottom, selectedPointPaint);
             canvas.drawRect(left, y, right, bottom, selectorFramePaint);
             canvas.drawText(date, tempLeft, fixTextYBaseBottom((bottom + y) / 2), textPaint);
+        }
+    }
+
+    /**
+     * 绘制X轴上的所有label
+     *
+     * @param canvas
+     */
+    private void drawXLabels(Canvas canvas) {
+        float columnSpace = width / gridColumns;
+        float y;
+        if (null != childDraw) {
+            y = childRect.bottom + baseLine + 5;
+        } else {
+            y = volRect.bottom + baseLine + 5;
+        }
+
+        float halfWidth = chartItemWidth / 2 * getScaleX();
+        float startX = getX(screenLeftIndex) - halfWidth;
+        float stopX = getX(screenRightIndex) + halfWidth;
+        int startLabelCount;
+        int endLabelCount;
+        if (fitXlabel) {
+            //X轴最左侧的值
+            float translateX = xToTranslateX(0);
+            if (translateX >= startX && translateX <= stopX) {
+                canvas.drawText(formatDateTime(getAdapter().getDate(screenLeftIndex)), 0, y, textPaint);
+            }
+            //X轴最右侧的值
+            translateX = xToTranslateX(width);
+            if (translateX >= startX && translateX <= stopX) {
+                String text = formatDateTime(getAdapter().getDate(screenRightIndex));
+                canvas.drawText(text, width - textPaint.measureText(text), y, textPaint);
+            }
+            startLabelCount = 1;
+            endLabelCount = gridColumns;
+        } else {
+            startLabelCount = 0;
+            endLabelCount = gridColumns + 1;
+        }
+        for (; startLabelCount < endLabelCount; startLabelCount++) {
+            float tempX = columnSpace * startLabelCount;
+            float translateX = xToTranslateX(tempX);
+            if (translateX >= startX && translateX <= stopX) {
+                int index = indexOfTranslateX(translateX);
+                String text = formatDateTime(dataAdapter.getDate(index));
+                canvas.drawText(text, tempX - textPaint.measureText(text) / 2, y, textPaint);
+            }
+        }
+    }
+
+    /**
+     * 绘制Y轴上的所有label
+     *
+     * @param canvas
+     */
+    private void drawYLabels(Canvas canvas) {
+        float rowSpace = displayHeight / gridRows;
+        int gridRowCount;
+        float rowValue;//当显示子视图时,y轴label减少显示一个
+        if (null != childDraw) {
+            gridRowCount = gridRows - 2;
+            rowValue = (mainMaxValue - mainMinValue) / gridRowCount;
+        } else {
+            gridRowCount = gridRows - 1;
+            rowValue = (mainMaxValue - mainMinValue) / gridRowCount;
+        }
+
+        //Y轴上网络的值
+        for (int i = 0; i <= gridRowCount; i++) {
+            String text = formatValue(mainMaxValue - i * rowValue);
+            float v = rowSpace * i + topPadding;
+            canvas.drawText(text, width - textPaint.measureText(text), v - 2, textPaint);
+        }
+
+        //交易量图的Y轴label
+        String maxVol = volDraw.getValueFormatter().format(volMaxValue);
+        canvas.drawText(maxVol, width - textPaint.measureText(maxVol), mainRect.bottom + baseLine, textPaint);
+
+        //子图Y轴label
+        if (null != childDraw) {
+            String childLable = childDraw.getValueFormatter().format(childMaxValue);
+            canvas.drawText(childLable, width - textPaint.measureText(childLable), volRect.bottom + baseLine, textPaint);
         }
     }
 
@@ -1095,6 +1114,9 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         return this.status;
     }
 
+    /**
+     * 当前主视图显示的指标
+     */
     private Status status = Status.MA;
 
     /**
@@ -1123,6 +1145,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         invalidate();
     }
 
+    /**
+     * 获取画板的最小位移
+     *
+     * @return
+     */
     private float getMinTranslate() {
 
         float dataLength = getDataLength();
@@ -1274,10 +1301,6 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         if (Math.abs(volMaxValue) < 0.01) {
             volMaxValue = 15.00f;
         }
-
-//        if (Math.abs(childMaxValue) < 0.01 && Math.abs(mChildMinValue) < 0.01) {
-//            childMaxValue = 1f;
-//        } else
         if (childMaxValue.equals(mChildMinValue)) {
             //当最大值和最小值都相等的时候 分别增大最大值和 减小最小值
             childMaxValue += Math.abs(childMaxValue * 0.05f);
@@ -1838,10 +1861,20 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         selectedPointPaint.setColor(color);
     }
 
+    /**
+     * 获取新的价格
+     *
+     * @return
+     */
     public float getLastPrice() {
         return lastPrice;
     }
 
+    /**
+     * 获取最新的成交量
+     *
+     * @return
+     */
     public float getLastVol() {
         return lastVol;
     }
@@ -1861,11 +1894,21 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
 
     }
 
+    /**
+     * 设置价格线的宽度
+     *
+     * @param lineWidth
+     */
     public void setPriceLineWidth(float lineWidth) {
         priceLinePaint.setStrokeWidth(lineWidth);
         priceLinePaint.setStyle(Paint.Style.STROKE);
     }
 
+    /**
+     * 价格线右侧的颜色
+     *
+     * @param color
+     */
     public void setPriceLineRightColor(int color) {
         priceLineBoxRightPaint.setColor(color);
     }
@@ -1881,6 +1924,11 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         chartItemWidth = pointWidth;
     }
 
+    /**
+     * 获取K线宽度
+     *
+     * @return
+     */
     public float getChartItemWidth() {
         return chartItemWidth;
     }
@@ -1889,11 +1937,21 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         return textPaint;
     }
 
+    /**
+     * 分时线呼吸灯的颜色
+     *
+     * @param color
+     */
     public void setEndPointColor(int color) {
         lineEndPointPaint.setColor(color);
         lineEndFillPointPaint.setColor(color);
     }
 
+    /**
+     * 分时线呼吸灯的颜色半径
+     *
+     * @param width
+     */
     public void setLineEndPointWidth(float width) {
         this.lineEndPointWidth = width;
     }
@@ -2031,49 +2089,104 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
     }
 
 
+    /**
+     * 选中的线的Y轴颜色
+     *
+     * @param color
+     */
     public void setSelectedYColor(int color) {
         this.selectedYColor = color;
     }
 
+    /**
+     * 背景色顶部颜色
+     *
+     * @param color
+     */
     public void setBackgroundStartColor(int color) {
         this.backGroundTopColor = color;
     }
 
+    /**
+     * 背景色底部颜色
+     *
+     * @param color
+     */
     public void setBackgroundEmdColor(int color) {
         this.backGroundBottomColor = color;
     }
 
+    /**
+     * 设置涨的颜色
+     *
+     * @param color
+     */
     public void setUpColor(int color) {
         ((MainDraw) mainDraw).setUpColor(color);
 
     }
 
+    /**
+     * 设置跌的颜色
+     *
+     * @param color
+     */
     public void setDownColor(int color) {
         ((MainDraw) mainDraw).setDownColor(color);
     }
 
+    /**
+     * 设置分时线颜色
+     *
+     * @param color
+     */
     public void setMinuteLineColor(int color) {
         ((MainDraw) mainDraw).setMinuteLineColor(color);
         ((VolumeDraw) volDraw).setMinuteColor(color);
     }
 
+    /**
+     * 设置分时线填充渐变的下部颜色
+     *
+     * @param color
+     */
     public void setAreaTopColor(int color) {
         this.areaTopColor = color;
     }
 
+    /**
+     * 设置分时线填充渐变的下部颜色
+     *
+     * @param color
+     */
     public void setAreaBottomColor(int color) {
         this.areaBottomColor = color;
     }
 
 
+    /**
+     * 设置是否以动画的方式变化最后一根线
+     *
+     * @return
+     */
     public boolean isAnimationLast() {
         return isAnimationLast;
     }
 
+    /**
+     * 设置主实图指定文字距离视图上边缘的距离,默认0
+     *
+     * @param indexPaddingTop
+     */
     public void setIndexPaddingTop(int indexPaddingTop) {
         ((MainDraw<ICandle>) mainDraw).setIndexPaddingTop(indexPaddingTop);
     }
 
+    /**
+     * 设置是否修改X左右边轴坐标的位置,默认true
+     *
+     * @param fitXlabel
+     */
     public void setFitXlabel(boolean fitXlabel) {
         this.fitXlabel = fitXlabel;
     }
