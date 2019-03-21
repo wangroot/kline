@@ -27,7 +27,6 @@ import com.icechao.klinelib.entity.IKLine;
 import com.icechao.klinelib.formatter.DateFormatter;
 import com.icechao.klinelib.formatter.TimeFormatter;
 import com.icechao.klinelib.formatter.ValueFormatter;
-import com.icechao.klinelib.utils.NumberUtil;
 import com.icechao.klinelib.utils.ViewUtil;
 
 import java.util.ArrayList;
@@ -939,12 +938,10 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
                 drawEndPoint(canvas, endLineRight);
             }
             //8 : 4 虚线
-            Path path = new Path();
             for (float i = endLineRight; i < textLeft - 2; i += 12) {
-                path.moveTo(i, y);
-                path.lineTo(i + 8, y);
+                canvas.drawLine(i, y, i + 8, y, priceLineBoxRightPaint);
             }
-            canvas.drawPath(path, priceLineBoxRightPaint);
+
             canvas.drawText(priceString, textLeft, fixTextYBaseBottom(y), priceLineBoxRightPaint);
             //绘制价格圆点
             if (isLine) {
@@ -1156,10 +1153,12 @@ public abstract class BaseKLineChartView extends ScrollAndScaleView {
         if (width == 0) {
             width = getMeasuredWidth();
         }
-        if (dataLength >= width) {
+        if (dataLength >= width - getmOverScrollRange()) {
             return -(dataLength - width);
+        }else {
+//            return width - dataLength;
+            return 0;
         }
-        return width - dataLength;
     }
 
 

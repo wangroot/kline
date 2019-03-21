@@ -70,6 +70,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         findViewById(R.id.text_view_rsi).setOnClickListener(this);
         findViewById(R.id.text_view_wr).setOnClickListener(this);
 
+
+        findViewById(R.id.text_view_one_minute).setOnClickListener(this);
+        findViewById(R.id.text_view_five_minute).setOnClickListener(this);
+        findViewById(R.id.text_view_half_hour).setOnClickListener(this);
+        findViewById(R.id.text_view_one_week).setOnClickListener(this);
+        findViewById(R.id.text_view_one_mounth).setOnClickListener(this);
+
         findViewById(R.id.text_view_hide_sub).setOnClickListener(this);
         findViewById(R.id.text_view_hide_master).setOnClickListener(this);
 
@@ -168,6 +175,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 chartView.hideSelectData();
                 chartView.setChildDraw(3);
                 break;
+            case R.id.text_view_one_minute:
+                chartView.hideSelectData();
+                chartView.setMainDrawLine(false);
+                adapter.resetData(all);
+                break;
+            case R.id.text_view_five_minute:
+                chartView.hideSelectData();
+                chartView.setMainDrawLine(false);
+                adapter.resetData(all.subList(12, 330));
+
+                break;
+            case R.id.text_view_half_hour:
+                chartView.hideSelectData();
+                chartView.setMainDrawLine(false);
+                adapter.resetData(all.subList(115, 405));
+                break;
+            case R.id.text_view_one_week:
+                chartView.hideSelectData();
+                chartView.setMainDrawLine(false);
+                adapter.resetData(all.subList(160, 480));
+                break;
+            case R.id.text_view_one_mounth:
+                chartView.hideSelectData();
+                chartView.setMainDrawLine(false);
+                adapter.resetData(all.subList(10, 30));
+                break;
 
         }
     }
@@ -188,24 +221,24 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             case R.id.radio_button_fifteen:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-                adapter.resetData(all);
+                adapter.resetData(all.subList(1, 300));
 
                 break;
             case R.id.radio_button_one_hour:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-                adapter.resetData(all);
+                adapter.resetData(all.subList(110, 400));
                 break;
             case R.id.radio_button_four_hour:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-                adapter.resetData(all);
+                adapter.resetData(all.subList(150, 450));
 
                 break;
             case R.id.radio_button_one_day:
                 chartView.hideSelectData();
                 chartView.setMainDrawLine(false);
-                adapter.resetData(all);
+                adapter.resetData(all.subList(10, 320));
                 break;
             case R.id.radio_button_more:
                 moreIndex.setVisibility(View.VISIBLE);
@@ -216,32 +249,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 attachedOperater.setVisibility(View.VISIBLE);
                 klineOperater.setVisibility(View.VISIBLE);
                 break;
-            case R.id.text_view_one_minute:
-                chartView.hideSelectData();
-                chartView.setMainDrawLine(false);
-                adapter.resetData(all);
-                break;
-            case R.id.text_view_five_minute:
-                chartView.hideSelectData();
-                chartView.setMainDrawLine(false);
-                adapter.resetData(all);
 
-                break;
-            case R.id.text_view_half_hour:
-                chartView.hideSelectData();
-                chartView.setMainDrawLine(false);
-                adapter.resetData(all);
-                break;
-            case R.id.text_view_one_week:
-                chartView.hideSelectData();
-                chartView.setMainDrawLine(false);
-                adapter.resetData(all);
-                break;
-            case R.id.text_view_one_mounth:
-                chartView.hideSelectData();
-                chartView.setMainDrawLine(false);
-                adapter.resetData(all);
-                break;
 
         }
     }

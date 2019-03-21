@@ -61,7 +61,8 @@ public class KLineChartAdapter extends BaseKLineChartAdapter {
 
         notifyDataWillChanged();
         if (null != data && data.size() > 0) {
-            datas.addAll(data);
+            datas.clear();
+            datas = data;
             this.lastData = data.get(data.size() - 1);
             notifyDataSetChanged();
         }
