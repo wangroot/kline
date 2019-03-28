@@ -26,6 +26,7 @@
   21. 添加时间和值的动态设置格式化
   22. 优化macd  rsi 指标线的算法
   23. 重写网络绘制算法
+  24. 添加设置LoadingView的方法,loadingView可以在调用show/Hide  Loading时执行一些动画
   
   
   
