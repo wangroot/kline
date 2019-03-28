@@ -33,14 +33,15 @@ import com.icechao.klinelib.utils.ViewUtil;
  *************************************************************************/
 public class KLineChartView extends BaseKLineChartView {
 
-    private ProgressBar mProgressBar;
+    private View progressbar;
 
-    private MACDDraw mMACDDraw;
-    private RSIDraw mRSIDraw;
-    private MainDraw mMainDraw;
-    private KDJDraw mKDJDraw;
-    private WRDraw mWRDraw;
-    private VolumeDraw mVolumeDraw;
+    private MACDDraw macdDraw;
+    private RSIDraw rsiDraw;
+    private MainDraw mainDraw;
+    private KDJDraw kdjDraw;
+    private WRDraw wrDraw;
+    private VolumeDraw volumeDraw;
+    private Context context;
 
 
     public KLineChartView(Context context) {
@@ -61,22 +62,22 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
     private void initView(Context context) {
+        this.context = context;
+        volumeDraw = new VolumeDraw(context);
+        macdDraw = new MACDDraw(context, getResources().getColor(R.color.chart_up), getResources().getColor(R.color.chart_down));
+        wrDraw = new WRDraw(context);
+        kdjDraw = new KDJDraw(context);
+        rsiDraw = new RSIDraw(context);
+        mainDraw = new MainDraw(context);
+        addChildDraw(macdDraw);
+        addChildDraw(kdjDraw);
+        addChildDraw(rsiDraw);
+        addChildDraw(wrDraw);
+        setVolDraw(volumeDraw);
+        setMainDraw(mainDraw);
 
-        mVolumeDraw = new VolumeDraw(context);
-        mMACDDraw = new MACDDraw(context, getResources().getColor(R.color.chart_up), getResources().getColor(R.color.chart_down));
-        mWRDraw = new WRDraw(context);
-        mKDJDraw = new KDJDraw(context);
-        mRSIDraw = new RSIDraw(context);
-        mMainDraw = new MainDraw(context);
-        addChildDraw(mMACDDraw);
-        addChildDraw(mKDJDraw);
-        addChildDraw(mRSIDraw);
-        addChildDraw(mWRDraw);
-        setVolDraw(mVolumeDraw);
-        setMainDraw(mMainDraw);
 
-
-        mVolumeDraw.setVolLeftColor(getResources().getColor(R.color.chart_text));
+        volumeDraw.setVolLeftColor(getResources().getColor(R.color.chart_text));
         setPriceLineColor(getResources().getColor(R.color.chart_text));
         setPriceLineWidth(ViewUtil.Dp2Px(context, 1));
         setPriceLineRightColor(getResources().getColor(R.color.right_index));
@@ -99,11 +100,7 @@ public class KLineChartView extends BaseKLineChartView {
         setEndPointColor(Color.WHITE);
         setLineEndPointWidth(ViewUtil.Dp2Px(context, 4));
 
-        mProgressBar = new ProgressBar(getContext());
-        LayoutParams layoutParams = new LayoutParams(ViewUtil.Dp2Px(context, 50), ViewUtil.Dp2Px(context, 50));
-        layoutParams.addRule(CENTER_IN_PARENT);
-        addView(mProgressBar, layoutParams);
-        mProgressBar.setVisibility(GONE);
+        //添加Loadding窗口
     }
 
     private void initAttrs(AttributeSet attrs) {
@@ -172,31 +169,41 @@ public class KLineChartView extends BaseKLineChartView {
 
     @Override
     public void onLeftSide() {
-        showLoading();
+//        showLoading();
     }
 
     @Override
     public void onRightSide() {
     }
 
+    /**
+     * 显示Loading同时显示K线
+     */
     public void showLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.VISIBLE);
-            isAnimationLast = false;
+        if (null != progressbar) {
+            setDefaultLoading();
         }
+        progressbar.setVisibility(View.VISIBLE);
+        isAnimationLast = false;
     }
 
+    /**
+     * 只显示Loading窗口,不显示K线
+     */
     public void justShowLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.VISIBLE);
+        if (null != progressbar) {
+            progressbar.setVisibility(View.VISIBLE);
             isShowLoading = true;
         }
     }
 
 
+    /**
+     * 隐藏Loading窗口
+     */
     public void hideLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.GONE);
+        if (null != progressbar) {
+            progressbar.setVisibility(View.GONE);
             isShowLoading = false;
         }
     }
@@ -209,20 +216,24 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
 
+    /**
+     * 设置是否可以放大
+     *
+     * @param scaleEnable
+     */
     @Override
     public void setScaleEnable(boolean scaleEnable) {
-        if (isShowLoading) {
-            throw new IllegalStateException("请勿在刷新状态设置属性");
-        }
         super.setScaleEnable(scaleEnable);
 
     }
 
+    /**
+     * 设置是否可以滚动
+     *
+     * @param scrollEnable
+     */
     @Override
     public void setScrollEnable(boolean scrollEnable) {
-        if (isShowLoading) {
-            throw new IllegalStateException("请勿在刷新状态设置属性");
-        }
         super.setScrollEnable(scrollEnable);
     }
 
@@ -230,21 +241,21 @@ public class KLineChartView extends BaseKLineChartView {
      * 设置DIF颜色
      */
     public void setDIFColor(int color) {
-        mMACDDraw.setDIFColor(color);
+        macdDraw.setDIFColor(color);
     }
 
     /**
      * 设置DEA颜色
      */
     public void setDEAColor(int color) {
-        mMACDDraw.setDEAColor(color);
+        macdDraw.setDEAColor(color);
     }
 
     /**
      * 设置MACD颜色
      */
     public void setMACDColor(int color) {
-        mMACDDraw.setMACDColor(color);
+        macdDraw.setMACDColor(color);
     }
 
     /**
@@ -253,49 +264,49 @@ public class KLineChartView extends BaseKLineChartView {
      * @param MACDWidth width
      */
     public void setMACDWidth(float MACDWidth) {
-        mMACDDraw.setMACDWidth(MACDWidth);
+        macdDraw.setMACDWidth(MACDWidth);
     }
 
     /**
      * 设置K颜色
      */
     public void setKColor(int color) {
-        mKDJDraw.setKColor(color);
+        kdjDraw.setKColor(color);
     }
 
     /**
      * 设置D颜色
      */
     public void setDColor(int color) {
-        mKDJDraw.setDColor(color);
+        kdjDraw.setDColor(color);
     }
 
     /**
      * 设置J颜色
      */
     public void setJColor(int color) {
-        mKDJDraw.setJColor(color);
+        kdjDraw.setJColor(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR1Color(int color) {
-        mWRDraw.setR1Color(color);
+        wrDraw.setR1Color(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR2Color(int color) {
-        mWRDraw.setR2Color(color);
+        wrDraw.setR2Color(color);
     }
 
     /**
      * 设置R颜色
      */
     public void setR3Color(int color) {
-        mWRDraw.setR3Color(color);
+        wrDraw.setR3Color(color);
     }
 
     /**
@@ -304,8 +315,8 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaOneColor(int color) {
-        mMainDraw.setMaOneColor(color);
-        mVolumeDraw.setMa5Color(color);
+        mainDraw.setMaOneColor(color);
+        volumeDraw.setMa5Color(color);
     }
 
     /**
@@ -314,8 +325,8 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaTwoColor(int color) {
-        mMainDraw.setMaTwoColor(color);
-        mVolumeDraw.setMa10Color(color);
+        mainDraw.setMaTwoColor(color);
+        volumeDraw.setMa10Color(color);
     }
 
     /**
@@ -324,7 +335,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color color
      */
     public void setMaThreeColor(int color) {
-        mMainDraw.setMaThreeColor(color);
+        mainDraw.setMaThreeColor(color);
     }
 
     /**
@@ -333,7 +344,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param textSize textsize
      */
     public void setSelectorTextSize(float textSize) {
-        mMainDraw.setSelectorTextSize(textSize);
+        mainDraw.setSelectorTextSize(textSize);
     }
 
     /**
@@ -342,7 +353,7 @@ public class KLineChartView extends BaseKLineChartView {
      * @param color Color
      */
     public void setSelectorBackgroundColor(int color) {
-        mMainDraw.setSelectorBackgroundColor(color);
+        mainDraw.setSelectorBackgroundColor(color);
     }
 
     /**
@@ -351,9 +362,9 @@ public class KLineChartView extends BaseKLineChartView {
      * @param candleWidth candleWidth
      */
     public void setCandleWidth(float candleWidth) {
-        mMainDraw.setCandleWidth(candleWidth);
+        mainDraw.setCandleWidth(candleWidth);
         //量的柱状图与蜡烛图同宽
-        mVolumeDraw.setBarWidth(candleWidth);
+        volumeDraw.setBarWidth(candleWidth);
     }
 
     /**
@@ -362,55 +373,90 @@ public class KLineChartView extends BaseKLineChartView {
      * @param candleLineWidth candleLineWidth
      */
     public void setCandleLineWidth(float candleLineWidth) {
-        mMainDraw.setCandleLineWidth(candleLineWidth);
+        mainDraw.setCandleLineWidth(candleLineWidth);
     }
 
     /**
      * 蜡烛是否空心
      */
     public void setCandleSolid(boolean candleSolid) {
-        mMainDraw.setStroke(candleSolid);
+        mainDraw.setStroke(candleSolid);
     }
 
+    /**
+     * Rsi1 线颜色
+     *
+     * @param color
+     */
     public void setRSI1Color(int color) {
-        mRSIDraw.setRSI1Color(color);
+        rsiDraw.setRSI1Color(color);
     }
 
+    /**
+     * Rsi2 线颜色
+     *
+     * @param color
+     */
     public void setRSI2Color(int color) {
-        mRSIDraw.setRSI2Color(color);
+        rsiDraw.setRSI2Color(color);
     }
 
+    /**
+     * Rsi3 线颜色
+     *
+     * @param color
+     */
     public void setRSI3Color(int color) {
-        mRSIDraw.setRSI3Color(color);
+        rsiDraw.setRSI3Color(color);
     }
 
+    /**
+     * 设置K线中文本的文字字号
+     *
+     * @param textSize
+     */
     @Override
     public void setTextSize(float textSize) {
         super.setTextSize(textSize);
-        mMainDraw.setTextSize(textSize);
-        mRSIDraw.setTextSize(textSize);
-        mMACDDraw.setTextSize(textSize);
-        mKDJDraw.setTextSize(textSize);
-        mWRDraw.setTextSize(textSize);
-        mVolumeDraw.setTextSize(textSize);
+        mainDraw.setTextSize(textSize);
+        rsiDraw.setTextSize(textSize);
+        macdDraw.setTextSize(textSize);
+        kdjDraw.setTextSize(textSize);
+        wrDraw.setTextSize(textSize);
+        volumeDraw.setTextSize(textSize);
     }
 
+    /**
+     * 设置指标线的线宽
+     *
+     * @param lineWidth
+     */
     public void setLineWidth(float lineWidth) {
-        mMainDraw.setLineWidth(lineWidth);
-        mRSIDraw.setLineWidth(lineWidth);
-        mMACDDraw.setLineWidth(lineWidth);
-        mKDJDraw.setLineWidth(lineWidth);
-        mWRDraw.setLineWidth(lineWidth);
-        mVolumeDraw.setLineWidth(lineWidth);
+        mainDraw.setLineWidth(lineWidth);
+        rsiDraw.setLineWidth(lineWidth);
+        macdDraw.setLineWidth(lineWidth);
+        kdjDraw.setLineWidth(lineWidth);
+        wrDraw.setLineWidth(lineWidth);
+        volumeDraw.setLineWidth(lineWidth);
     }
 
+    /**
+     * 主视图文本颜色
+     *
+     * @param color
+     */
     @Override
     public void setTextColor(int color) {
         super.setTextColor(color);
-        mMainDraw.setSelectorTextColor(color);
+        mainDraw.setSelectorTextColor(color);
     }
 
 
+    /**
+     * 设置主视图是否是显示线否为K线
+     *
+     * @param isLine
+     */
     public void setMainDrawLine(boolean isLine) {
         setShowLine(isLine);
     }
@@ -420,5 +466,28 @@ public class KLineChartView extends BaseKLineChartView {
         if (!isShowLoading) {
             super.onLongPress(e);
         }
+    }
+
+    /**
+     * 设置Loading的View,如果有动画不会自动执行
+     *
+     * @param view   View
+     * @param width  宽
+     * @param height 高
+     */
+    public void setLoadingView(View view, int width, int height) {
+        LayoutParams layoutParams = new LayoutParams(width, height);
+        layoutParams.addRule(CENTER_IN_PARENT);
+        addView(view, layoutParams);
+        view.setVisibility(View.GONE);
+        progressbar = view;
+    }
+
+    /**
+     * 设置一个默认的LoadingView
+     */
+    private void setDefaultLoading() {
+        ProgressBar progressbar = new ProgressBar(getContext());
+        setLoadingView(progressbar, ViewUtil.Dp2Px(context, 50), ViewUtil.Dp2Px(context, 50));
     }
 }
