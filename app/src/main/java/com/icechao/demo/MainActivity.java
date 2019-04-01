@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
             }
         });
         chartView.setOverScrollRange(getWindowManager().getDefaultDisplay().getWidth() / 5);
-
+        chartView.showLoading();
     }
 
     int i = 0;
@@ -131,6 +131,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 runOnUiThread(() -> {
                     all = DataRequest.getALL(MainActivity.this);
                     adapter.resetData(all);
+                    chartView.hideLoading();
                     changeLast();
                 });
             }

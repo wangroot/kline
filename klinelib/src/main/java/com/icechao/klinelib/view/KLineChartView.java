@@ -99,8 +99,6 @@ public class KLineChartView extends BaseKLineChartView {
 
         setEndPointColor(Color.WHITE);
         setLineEndPointWidth(ViewUtil.Dp2Px(context, 4));
-
-        //添加Loadding窗口
     }
 
     private void initAttrs(AttributeSet attrs) {
@@ -180,7 +178,7 @@ public class KLineChartView extends BaseKLineChartView {
      * 显示Loading同时显示K线
      */
     public void showLoading() {
-        if (null != progressbar) {
+        if (null == progressbar) {
             setDefaultLoading();
         }
         progressbar.setVisibility(View.VISIBLE);
@@ -228,7 +226,7 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
     /**
-     * 设置是否可以滚动
+     * 设置是否可以拖动
      *
      * @param scrollEnable
      */
