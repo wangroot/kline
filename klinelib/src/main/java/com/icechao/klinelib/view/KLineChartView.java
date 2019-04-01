@@ -27,15 +27,8 @@ import com.icechao.klinelib.utils.ViewUtil;
  *************************************************************************/
 public class KLineChartView extends BaseKLineChartView {
 
-    private ProgressBar mProgressBar;
-
-//    private MACDDraw mMACDDraw;
-//    private RSIDraw mRSIDraw;
-    //    private MainDraw mMainDraw;
-//    private KDJDraw mKDJDraw;
-//    private WRDraw mWRDraw;
-//    private VolumeDraw mVolumeDraw;
-
+    private View progressBar;
+    private Context context;
 
     public KLineChartView(Context context) {
         this(context, null);
@@ -55,9 +48,7 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
     private void initView(Context context) {
-
-
-
+        this.context = context;
         setVolLeftColor(getResources().getColor(R.color.chart_text));
         setPriceLineColor(getResources().getColor(R.color.chart_text));
         setPriceLineWidth(ViewUtil.Dp2Px(context, 1));
@@ -79,13 +70,8 @@ public class KLineChartView extends BaseKLineChartView {
         setAreaBottomColor(getResources().getColor(R.color.chart_line_end));
 
         setEndPointColor(Color.WHITE);
-        setLineEndPointWidth(ViewUtil.Dp2Px(context, 4));
+        setLineEndPointWidth(ViewUtil.Dp2Px(this.context, 4));
 
-        mProgressBar = new ProgressBar(getContext());
-        LayoutParams layoutParams = new LayoutParams(ViewUtil.Dp2Px(context, 50), ViewUtil.Dp2Px(context, 50));
-        layoutParams.addRule(CENTER_IN_PARENT);
-        addView(mProgressBar, layoutParams);
-        mProgressBar.setVisibility(GONE);
     }
 
     private void initAttrs(AttributeSet attrs) {
@@ -154,31 +140,39 @@ public class KLineChartView extends BaseKLineChartView {
 
     @Override
     public void onLeftSide() {
-        showLoading();
+//        showLoading();
     }
 
     @Override
     public void onRightSide() {
     }
 
+    /**
+     * 显示正在加载,显示K线
+     */
     public void showLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.VISIBLE);
-            isAnimationLast = false;
+        if (null != progressBar) {
+            progressBar = new ProgressBar(context);
+            setLoadingView(progressBar);
         }
+        progressBar.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * 显示正在加载,隐藏K线
+     */
     public void justShowLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.VISIBLE);
-            isShowLoading = true;
-        }
+        showLoading();
+        isShowLoading = true;
     }
 
 
+    /**
+     * 隐藏正在加载
+     */
     public void hideLoading() {
-        if (null != mProgressBar) {
-            mProgressBar.setVisibility(View.GONE);
+        if (null != progressBar) {
+            progressBar.setVisibility(View.GONE);
             isShowLoading = false;
         }
     }
@@ -381,5 +375,13 @@ public class KLineChartView extends BaseKLineChartView {
         if (!isShowLoading) {
             super.onLongPress(e);
         }
+    }
+
+    public void setLoadingView(View view) {
+        progressBar = view;
+        LayoutParams layoutParams = new LayoutParams(ViewUtil.Dp2Px(context, 50), ViewUtil.Dp2Px(context, 50));
+        layoutParams.addRule(CENTER_IN_PARENT);
+        addView(progressBar, layoutParams);
+        progressBar.setVisibility(GONE);
     }
 }
